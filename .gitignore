@@ -1,0 +1,15 @@
+.env
+/.phpunit.cache
+/composer.lock
+/vendor
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+/.php-cs-fixer.cache
