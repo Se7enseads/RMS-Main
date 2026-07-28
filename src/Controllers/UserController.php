@@ -12,16 +12,16 @@ use App\Core\View;
  */
 class UserController
 {
-  private UserService $userService;
+    private UserService $userService;
 
-  public function __construct()
-  {
-    $this->userService = new UserService();
-  }
+    public function __construct()
+    {
+        $this->userService = new UserService();
+    }
 
-  public function index(): void
-  {
-    $users = $this->userService->getAllActiveUsers();
-    View::render('users/index', ['users' => $users]);
-  }
+    public function index(): void
+    {
+        $users = $this->userService->getAllActiveUsers();
+        View::render('users/index', ['users' => $users]);
+    }
 }

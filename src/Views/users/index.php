@@ -1,11 +1,5 @@
 <h1>User List</h1>
 
-<!--
-<?php if (!empty($flash)): ?>
-  <div class="flash"><?= htmlspecialchars($flash) ?></div>
-<?php endif; ?>
--->
-
 <a href="/users/create">Create New User</a>
 
 <table>
@@ -19,8 +13,10 @@
     </tr>
   </thead>
   <tbody>
-    <?php if (!empty($users)) {
-      foreach ($users as $user): ?>
+    <?php
+
+    if (!empty($users)) {
+        foreach ($users as $user) : ?>
         <tr>
           <td><?= $user['id'] ?></td>
           <td><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></td>
@@ -34,9 +30,9 @@
             </form>
           </td>
         </tr>
-    <?php endforeach;
+        <?php endforeach;
     } else {
-      echo '<tr><td colspan="5">No users found.</td></tr>';
+        echo '<tr><td colspan="5">No users found.</td></tr>';
     } ?>
   </tbody>
 </table>

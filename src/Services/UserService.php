@@ -7,16 +7,15 @@ use PDO;
 
 class UserService
 {
+    private PDO $db;
+    public function __construct()
+    {
+        $this->db = Database::getConnection();
+    }
 
-  private PDO $db;
-  public function __construct()
-  {
-    $this->db = Database::getConnection();
-  }
-
-  public function getAllActiveUsers(): array
-  {
-    $sql = "
+    public function getAllActiveUsers(): array
+    {
+        $sql = "
             SELECT 
                 users.*, 
                 roles.name AS role_name
@@ -24,7 +23,7 @@ class UserService
             LEFT JOIN roles ON users.role_id = roles.id
             WHERE users.active = 1
         ";
-    $stmt = $this->db->query($sql);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-  }
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

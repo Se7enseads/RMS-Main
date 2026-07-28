@@ -11,7 +11,7 @@
 
 <body>
   <header>
-    <a href="/dashboard" class="logo">RMS</a>
+    <a href="/" class="logo">RMS</a>
     <nav>
       <a href="/users">Users</a>
       <a href="/roles">Roles</a>
@@ -19,7 +19,7 @@
       <a href="/logout">Logout</a>
     </nav>
   </header>
-  <main><?= htmlspecialchars($slot ?? '', ENT_QUOTES, 'UTF-8') ?></main>
+  <main><?= $slot?></main>
   <footer>&copy; <?= date('Y') ?> Restaurant Management System</footer>
 </body>
 

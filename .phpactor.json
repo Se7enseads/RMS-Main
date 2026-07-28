@@ -1,0 +1,6 @@
+{
+  "$schema": "/phpactor.schema.json",
+  "language_server.diagnostic_exclude_paths": [
+    "./src/Views/**/*"
+  ]
+}
