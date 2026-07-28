@@ -18,14 +18,14 @@
     if (!empty($users)) {
         foreach ($users as $user) : ?>
         <tr>
-          <td><?= $user['id'] ?></td>
-          <td><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></td>
-          <td><?= htmlspecialchars($user['role_name'] ?? 'Not assigned') ?></td>
-          <td><?= htmlspecialchars($user['employee_num']) ?></td>
+          <td><?= $user->id ?></td>
+          <td><?= htmlspecialchars($user->getFullName()) ?></td>
+          <td><?= htmlspecialchars($user->roleName ?? 'Not assigned') ?></td>
+          <td><?= htmlspecialchars($user->employeeNum) ?></td>
           <td>
-            <a href="/users/update/<?= $user['id'] ?>">Edit</a>
+            <a href="/users/update/<?= $user->id ?>">Edit</a>
             |
-            <form action="/users/deactivate/<?= $user['id'] ?>" method="POST" style="display:inline;">
+            <form action="/users/deactivate/<?= $user->id ?>" method="POST" style="display:inline;">
               <button type="submit" onclick="return confirm('Are you sure?')">Deactivate</button>
             </form>
           </td>
