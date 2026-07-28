@@ -1,0 +1,25 @@
+.users-table td:last-child {
+  white-space: nowrap;
+}
+
+.users-table td:last-child a {
+  font-size: 0.85rem;
+}
+
+.users-table td:last-child form {
+  display: inline;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.users-table td:last-child button {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  background: var(--danger);
+  color: var(--text-light);
+}
+
+.users-table td:last-child button:hover {
+  background: var(--danger-light);
+}

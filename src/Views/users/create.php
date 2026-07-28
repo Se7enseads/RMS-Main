@@ -11,6 +11,8 @@
 <?php endif ?>
 
 <form action="/users/create" method="POST">
+  <!-- TODO: Errors from sql -->
+
   <label>Employee Number
     <input type="text" name="employee_num" value="<?= htmlspecialchars($old['employee_num'] ?? '') ?>" required>
   </label>
@@ -47,10 +49,16 @@
     <select name="role_id" required>
       <option value="">Select a role</option>
       <?php foreach ($roles as $role) : ?>
-      <option value="<?= $role->id ?>" <?= ($old['role_id'] ?? '') == $role->id ? 'selected' : '' ?>><?= htmlspecialchars($role->name) ?></option>
+          <option value="<?= $role->id ?>" <?= ($old['role_id'] ?? '') == $role->id ? 'selected' : '' ?>>
+            <?= htmlspecialchars($role->name) ?>
+          </option>
       <?php endforeach ?>
     </select>
   </label>
 
   <button type="submit">Create</button>
 </form>
+
+<a href="/users" class="button-outline" style="margin-top: 12px; display: inline-block;">
+  ← Back to Users
+</a>

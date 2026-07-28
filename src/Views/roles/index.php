@@ -1,8 +1,8 @@
 <h1>Role List</h1>
 
-<a href="/roles/create">Create New Role</a>
+<a href="/roles/create" class="button button-primary">+ Create New Role</a>
 
-<table>
+<table class="roles-table">
   <thead>
     <tr>
       <th>ID</th>

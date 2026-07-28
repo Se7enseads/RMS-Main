@@ -1,8 +1,8 @@
 <h1>User List</h1>
 
-<a href="/users/create">Create New User</a>
+<a href="/users/create" class="button button-primary">+ Create New User</a>
 
-<table>
+<table class="users-table">
   <thead>
     <tr>
       <th>ID</th>
@@ -23,9 +23,8 @@
           <td><?= htmlspecialchars($user->roleName ?? 'Not assigned') ?></td>
           <td><?= htmlspecialchars($user->employeeNum) ?></td>
           <td>
-            <a href="/users/update/<?= $user->id ?>">Edit</a>
-            |
-            <form action="/users/deactivate/<?= $user->id ?>" method="POST" style="display:inline;">
+            <a href="/users/update/<?= $user->id ?>" class="button-outline">Edit</a>
+            <form action="/users/deactivate/<?= $user->id ?>" method="POST">
               <button type="submit" onclick="return confirm('Are you sure?')">Deactivate</button>
             </form>
           </td>

@@ -1,0 +1,26 @@
+@import url('globals.css');
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+h1 {
+  font-size: 4rem;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+p {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+a {
+  color: var(--primary-light);
+  font-weight: 600;
+}

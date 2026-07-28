@@ -23,4 +23,4 @@
   <footer>&copy; <?= date('Y') ?> Restaurant Management System</footer>
 </body>
 
-</html
+</html>
