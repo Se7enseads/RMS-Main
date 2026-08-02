@@ -22,8 +22,9 @@ class Database
     {
         $db_host = "127.0.0.1";
         $db_name = "rms";
+        $db_port = "3306";
 
-        $dsn = "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4";
+        $dsn = "mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4";
 
         $db_user = "user";
         $db_pass = "password";
