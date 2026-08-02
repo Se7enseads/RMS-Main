@@ -43,6 +43,21 @@ class UserRepository
         return $row ? User::fromRow($row) : null;
     }
 
+    public function findByPin(string $pin): ?User
+    {
+        $sql = "
+            SELECT users.*, roles.name AS role_name
+            FROM users
+            LEFT JOIN roles ON users.role_id = roles.id
+            WHERE users.pin = :pin
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['pin' => $pin]);
+        $row = $stmt->fetch();
+
+        return $row ? User::fromRow($row) : null;
+    }
+
     public function findByEmployeeNum(string $employeeNum): ?User
     {
         $sql = "

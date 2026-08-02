@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use App\Core\Session;
 use App\Core\View;
 
 // 1. Load the routes
@@ -13,14 +14,23 @@ $routes = require __DIR__ . '/../src/routes.php';
 
 // 2. Match the current HTTP Request to a route
 $request = Request::createFromGlobals();
-$context = (new RequestContext())->fromRequest($request);
+$context = new RequestContext()->fromRequest($request);
 $matcher = new UrlMatcher($routes, $context);
+
+// TODO: add session configuration
 
 try {
     // get the parameters from the matched route
     $parameters = $matcher->match($request->getPathInfo());
 
-    // TODO: add Auth and RBAC middleware
+    // Auth middleware
+    if ($parameters['_auth'] ?? false) {
+        Session::start();
+        if (!Session::has('user_id')) {
+            header('Location: /login');
+            return;
+        }
+    }
 
     // get the controller class and method from the parameters
     [$controllerClass, $method] = $parameters['_controller'];

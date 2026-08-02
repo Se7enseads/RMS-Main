@@ -1,0 +1,148 @@
+@import url('globals.css');
+
+body {
+    font-family: var(--font);
+    background: var(--primary-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background: var(--surface);
+    padding: 31px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: var(--text);
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-family: var(--font);
+    color: var(--text-muted);
+    outline: none;
+    transition: color 0.2s;
+}
+
+.tab.active {
+    border-bottom: 2px solid var(--primary-light);
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+.form-panel {
+    display: none;
+}
+
+.form-panel.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-family: var(--font);
+    color: var(--text);
+    background: var(--surface);
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+}
+
+#pin-input {
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    color: var(--text-light);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-family: var(--font);
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+button[type="submit"]:hover {
+    background: var(--primary-light);
+}
+
+.error {
+    color: var(--danger);
+    margin-bottom: 16px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.key {
+    padding: 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font);
+    color: var(--text);
+    transition: background 0.15s;
+}
+
+.key:active {
+    background: var(--border-light);
+}

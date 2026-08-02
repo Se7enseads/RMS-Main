@@ -15,7 +15,8 @@
       <a href="/users">Users</a>
       <a href="/roles">Roles</a>
       <a href="/permissions">Permissions</a>
-      <a href="/logout">Logout</a>
+       <!-- TODO: should be dynamic  -->
+      <a href="/logout">Logout</a> 
     </nav>
   </header>
   <main><?= $slot ?></main>
