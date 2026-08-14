@@ -59,10 +59,10 @@ class AuthController
         }
 
         if ($result['success']) {
-            if ($result['user']->roleName !== 'MANAGER') {
-                header('Location: /');
-            } else {
+            if ($result['user']->roleName === 'WAITER') {
                 header('Location: /kiosk');
+            } else {
+                header('Location: /');
             }
             return;
         }

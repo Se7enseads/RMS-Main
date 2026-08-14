@@ -14,9 +14,7 @@ class AuthService
     {
         $this->userRepository = new UserRepository();
     }
-    /**
-     * @return array<string,mixed>
-     */
+
     public function loginWithPassword(string $employeeNum, string $password): array
     {
         $user = $this->userRepository->findByEmployeeNum($employeeNum);
@@ -33,9 +31,7 @@ class AuthService
 
         return ['success' => true, 'user' => $user];
     }
-    /**
-     * @return array<string,mixed>
-     */
+
     public function loginWithPin(string $pin): array
     {
         $user = $this->userRepository->findByPin($pin);
@@ -53,6 +49,7 @@ class AuthService
     {
         Session::set('user_id', $user->id);
         Session::set('user_name', $user->getFullName());
+        Session::set('role_id', $user->roleId);
         Session::set('login_type', $type);
     }
 

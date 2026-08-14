@@ -15,6 +15,8 @@ class RoleRepository
         $this->db = Database::getConnection();
     }
 
+//    TODO: Reports must make sense
+
     public function findAll(): array
     {
         $stmt = $this->db->query("SELECT * FROM roles");
@@ -38,5 +40,14 @@ class RoleRepository
         $row = $stmt->fetch();
 
         return $row ? Role::fromRow($row) : null;
+    }
+
+    public function insert(string $name): Role
+    {
+        $stmt = $this->db->prepare("INSERT INTO roles (name) VALUES (:name)");
+        $stmt->execute(['name' => $name]);
+
+        $id = (int)$this->db->lastInsertId();
+        return new Role(id: $id, name: $name);
     }
 }

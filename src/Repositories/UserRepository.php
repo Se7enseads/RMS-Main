@@ -15,6 +15,12 @@ class UserRepository
         $this->db = Database::getConnection();
     }
 
+    public function countActive(): int
+    {
+        $stmt = $this->db->query("SELECT COUNT(*) FROM users WHERE active = 1");
+        return (int) $stmt->fetchColumn();
+    }
+
     public function findAllActive(): array
     {
         $sql = "
@@ -94,5 +100,42 @@ class UserRepository
         ]);
 
         return $this->findById((int) $this->db->lastInsertId());
+    }
+
+    /**
+     * @param array<int,mixed> $data
+     */
+    public function update(int $id, array $data): ?User
+    {
+        $sql = "UPDATE users
+                SET employee_num = :employee_num,
+                    first_name = :first_name,
+                    middle_name = :middle_name,
+                    last_name = :last_name,
+                    national_id = :national_id,
+                    pin = :pin,
+                    phone_number = :phone_number,
+                    role_id = :role_id
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'employee_num' => $data['employee_num'],
+            'first_name' => $data['first_name'],
+            'middle_name' => $data['middle_name'] ?? null,
+            'last_name' => $data['last_name'],
+            'national_id' => $data['national_id'],
+            'pin' => $data['pin'],
+            'phone_number' => $data['phone_number'] ?? null,
+            'role_id' => (int) $data['role_id'],
+            'id' => $id,
+        ]);
+
+        return $this->findById($id);
+    }
+
+    public function deactivate(int $id): bool
+    {
+        $stmt = $this->db->prepare("UPDATE users SET active = 0 WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
     }
 }

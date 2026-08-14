@@ -3,11 +3,22 @@
 namespace App\Controllers;
 
 use App\Core\View;
+use App\Services\DashboardService;
 
 class IndexController
 {
+    private DashboardService $dashboardService;
+
+    public function __construct()
+    {
+        $this->dashboardService = new DashboardService();
+    }
+
     public function index(): void
     {
-        View::render('index/index');
+        $date = $_GET['date'] ?? null;
+        $stats = $this->dashboardService->getAdminStats($date);
+
+        View::render('index/index', $stats);
     }
 }

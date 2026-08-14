@@ -1,4 +1,4 @@
--- User Module
+-- Staff Module
 -- ---------------------
 CREATE TABLE IF NOT EXISTS roles
 (
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS permissions
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS users
+CREATE TABLE IF NOT EXISTS staff
 (
     id            INT PRIMARY KEY AUTO_INCREMENT,
     employee_num  VARCHAR(20)  NOT NULL UNIQUE,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS inventory_movements
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (inventory_id) REFERENCES inventory (id),
-    FOREIGN KEY (performed_by) REFERENCES users (id),
+    FOREIGN KEY (performed_by) REFERENCES staff (id),
 
     INDEX (created_at),
     INDEX (movement_type),
@@ -151,19 +151,19 @@ CREATE TABLE IF NOT EXISTS orders
     order_number VARCHAR(50)                                    NOT NULL UNIQUE,
     status       ENUM ('OPEN','PLACED','COMPLETED','CANCELLED') NOT NULL,
     type         ENUM ('DINE_IN','TAKEAWAY','DELIVERY')         NOT NULL,
-    user_id      INT                                            NOT NULL,
+    staff_id      INT                                            NOT NULL,
     table_id     INT                                            NOT NULL,
     total_amount DECIMAL(12, 2)                                 NOT NULL,
     closed_at    TIMESTAMP,
     created_at   TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (staff_id) REFERENCES staff (id),
     FOREIGN KEY (table_id) REFERENCES tables (id),
 
     INDEX (status),
     INDEX (created_at),
-    INDEX (user_id, created_at) -- *
+    INDEX (staff_id, created_at) -- *
 );
 
 CREATE TABLE IF NOT EXISTS order_items
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS payments
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (order_id) REFERENCES orders (id),
-    FOREIGN KEY (cashier_id) REFERENCES users (id),
+    FOREIGN KEY (cashier_id) REFERENCES staff (id),
 
     INDEX (created_at),
     INDEX (method)
@@ -204,52 +204,24 @@ CREATE TABLE IF NOT EXISTS payments
 
 -- Booking Module
 -- ------------------
-CREATE TABLE IF NOT EXISTS bookings
+CREATE TABLE IF NOT EXISTS reservation
 (
     id            INT PRIMARY KEY AUTO_INCREMENT,
-    user_id       INT          NOT NULL,
+    staff_id       INT          NOT NULL,
     table_id      INT          NOT NULL,
     customer_name VARCHAR(100) NOT NULL,
-    booking_time  TIMESTAMP    NOT NULL,
-    status        ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED') DEFAULT 'PENDING',
+    reservation_time  TIMESTAMP    NOT NULL,
+    status        ENUM ( 'CANCELLED', 'PAID') DEFAULT 'PAID',
+    payment_id    INT              NOT NULL ,
     created_at    TIMESTAMP                                               DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP                                               DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (staff_id) REFERENCES staff (id),
     FOREIGN KEY (table_id) REFERENCES tables (id),
+    FOREIGN KEY (payment_id) REFERENCES payments (id),
 
-    INDEX (booking_time),
+    INDEX (reservation_time),
     INDEX (status)
-);
-
--- Promotion Module
--- --------------------
-
-CREATE TABLE IF NOT EXISTS promotions
-(
-    id         INT PRIMARY KEY AUTO_INCREMENT,
-    name       VARCHAR(100)                            NOT NULL,
-    type       ENUM ('BOGO', 'DISCOUNT', 'HAPPY_HOUR') NOT NULL,
-    discount   DECIMAL(5, 2)                           NULL,
-    active     BOOLEAN   DEFAULT TRUE,
-    start_at   TIMESTAMP                               NULL,
-    end_at     TIMESTAMP                               NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    INDEX (active),
-    INDEX (start_at, end_at)
-);
-
-CREATE TABLE IF NOT EXISTS promotions_menu_items
-(
-    promotion_id INT NOT NULL,
-    menu_item_id INT NOT NULL,
-
-    PRIMARY KEY (promotion_id, menu_item_id),
-
-    FOREIGN KEY (promotion_id) REFERENCES promotions (id),
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items (id)
 );
 
 -- System Module
@@ -258,12 +230,12 @@ CREATE TABLE IF NOT EXISTS promotions_menu_items
 CREATE TABLE IF NOT EXISTS audit_logs
 (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT          NOT NULL,
+    staff_id    INT          NOT NULL,
     action     VARCHAR(255) NOT NULL,
     ip_address VARCHAR(45),
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (staff_id) REFERENCES staff (id),
     INDEX (created_at)
 );
 
@@ -309,6 +281,6 @@ CREATE TABLE IF NOT EXISTS restaurant_details
     created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (created_by) REFERENCES users (id),
+    FOREIGN KEY (created_by) REFERENCES staff (id),
     INDEX (name)
 );

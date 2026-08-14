@@ -1,8 +1,18 @@
 <h1>Create Role</h1>
 
+<?php if (!empty($errors)) : ?>
+<div class="errors">
+  <ul>
+    <?php foreach ($errors as $msg) : ?>
+    <li><?= htmlspecialchars($msg) ?></li>
+    <?php endforeach ?>
+  </ul>
+</div>
+<?php endif ?>
+
 <form action="/roles/create" method="POST">
   <label>Role Name
-    <input type="text" name="name" required>
+    <input type="text" name="name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
   </label>
 
   <button type="submit">Create</button>

@@ -23,4 +23,23 @@ class RoleService
     {
         return $this->roleRepository->findById($id);
     }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function createRole(string $name): array
+    {
+        $name = trim($name);
+
+        if ($name === '') {
+            return ['success' => false, 'errors' => ['name' => 'Role name is required.']];
+        }
+
+        if ($this->roleRepository->findByName($name)) {
+            return ['success' => false, 'errors' => ['name' => 'Role already exists.']];
+        }
+
+        $role = $this->roleRepository->insert($name);
+        return ['success' => true, 'role' => $role];
+    }
 }

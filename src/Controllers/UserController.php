@@ -51,4 +51,48 @@ class UserController
             'old' => $data,
         ]);
     }
+
+    public function edit(int $id): void
+    {
+        $user = $this->userService->getUserById($id);
+        if (!$user) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $roleService = new RoleService();
+        $roles = $roleService->getAllRoles();
+        View::render('users/edit', [
+            'user' => $user,
+            'roles' => $roles,
+        ]);
+    }
+
+    public function update(int $id): void
+    {
+        $data = $_POST;
+        $result = $this->userService->updateUser($id, $data);
+
+        if ($result['success']) {
+            header('Location: /users');
+            return;
+        }
+
+        $user = $this->userService->getUserById($id);
+        $roleService = new RoleService();
+        $roles = $roleService->getAllRoles();
+        View::render('users/edit', [
+            'user' => $user,
+            'roles' => $roles,
+            'errors' => $result['errors'],
+            'old' => $data,
+        ]);
+    }
+
+    public function deactivate(int $id): void
+    {
+        $this->userService->deactivateUser($id);
+        header('Location: /users');
+    }
 }

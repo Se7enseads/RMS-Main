@@ -24,4 +24,20 @@ class RoleController
     {
         View::render('roles/create');
     }
+
+    public function save(): void
+    {
+        $name = $_POST['name'] ?? '';
+        $result = $this->roleService->createRole($name);
+
+        if ($result['success']) {
+            header('Location: /roles');
+            return;
+        }
+
+        View::render('roles/create', [
+            'errors' => $result['errors'],
+            'old' => ['name' => $name],
+        ]);
+    }
 }

@@ -8,8 +8,19 @@ use Symfony\Component\Routing\Route;
 
 $kioskRoutes = new RouteCollection();
 
-$kioskRoutes->add('kiosk', new Route('/kiosk', [
-    '_controller' => [KioskController::class, 'index'],
+$kioskRoutes->add('kiosk_dashboard', new Route('/kiosk', [
+    '_controller' => [KioskController::class, 'dashboard'],
+    '_auth' => true,
 ], methods: ['GET']));
+
+$kioskRoutes->add('kiosk_order', new Route('/kiosk/order', [
+    '_controller' => [KioskController::class, 'order'],
+    '_auth' => true,
+], methods: ['GET']));
+
+$kioskRoutes->add('kiosk_place_order', new Route('/kiosk/order', [
+    '_controller' => [KioskController::class, 'placeOrder'],
+    '_auth' => true,
+], methods: ['POST']));
 
 return $kioskRoutes;

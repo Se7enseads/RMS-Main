@@ -58,9 +58,42 @@ class UserService
 
     /**
      * @param array<int,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function updateUser(int $id, array $data): array
+    {
+        $errors = $this->validateUserData($data, $id);
+
+        if ($errors) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $existing = $this->userRepository->findByEmployeeNum($data['employee_num']);
+        if ($existing && $existing->id !== $id) {
+            return ['success' => false, 'errors' => ['employee_num' => 'Employee number already exists.']];
+        }
+
+        $user = $this->userRepository->update($id, $data);
+        return ['success' => true, 'user' => $user];
+    }
+
+    public function deactivateUser(int $id): array
+    {
+        $user = $this->userRepository->findById($id);
+        if (!$user) {
+            return ['success' => false, 'errors' => ['user' => 'User not found.']];
+        }
+
+        $this->userRepository->deactivate($id);
+        return ['success' => true, 'user' => $user];
+    }
+
+    /**
+     * @param array<int,mixed> $data
+     * @param int|null $excludeId Skip uniqueness checks for this user
      * @return array<string,string>
      */
-    private function validateUserData(array $data): array
+    private function validateUserData(array $data, ?int $excludeId = null): array
     {
         $errors = [];
 
@@ -85,7 +118,9 @@ class UserService
         }
 
         if (empty($data['password']) || strlen($data['password']) < 8) {
-            $errors['password'] = 'Password must be at least 8 characters.';
+            if ($excludeId === null) {
+                $errors['password'] = 'Password must be at least 8 characters.';
+            }
         }
 
         if (empty($data['role_id'])) {
