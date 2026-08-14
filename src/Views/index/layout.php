@@ -5,10 +5,10 @@ use App\Core\Session;
 $userName = Session::get('user_name') ?? '';
 $currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 $navItems = [
-    ['href' => '/', 'label' => 'Dashboard'],
-    ['href' => '/items', 'label' => 'Items'],
-    ['href' => '/users', 'label' => 'Users'],
-    ['href' => '/roles', 'label' => 'Roles'],
+        ['href' => '/', 'label' => 'Dashboard'],
+        ['href' => '/items', 'label' => 'Items'],
+        ['href' => '/users', 'label' => 'Users'],
+        ['href' => '/roles', 'label' => 'Roles'],
 ];
 ?>
 

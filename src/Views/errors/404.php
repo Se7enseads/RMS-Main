@@ -9,10 +9,10 @@
 </head>
 
 <body>
-  <div>
+<div>
     <h1>404</h1>
     <p>Page not found. <a href="/">Back to home</a></p>
-  </div>
+</div>
 </body>
 
 </html>

@@ -9,10 +9,10 @@
 </head>
 
 <body>
-  <div>
+<div>
     <h1>403</h1>
     <p>You do not have permission to access this page. <a href="/">Back to home</a></p>
-  </div>
+</div>
 </body>
 
 </html>
