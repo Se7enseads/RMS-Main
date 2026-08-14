@@ -16,8 +16,8 @@ $userName = Session::get('user_name') ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RMS - Kiosk</title>
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/kiosk.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/kiosk.css">
 </head>
 <body class="kiosk-body">
 
