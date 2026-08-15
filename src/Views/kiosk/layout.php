@@ -35,7 +35,10 @@ $userName = Session::get('user_name') ?? '';
     </nav>
     <div class="sidebar-footer">
         <div class="sidebar-user"><?= htmlspecialchars($userName) ?></div>
-        <a href="/logout" class="sidebar-link">Logout</a>
+        <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
+            <button type="submit" class="sidebar-link">Logout</button>
+        </form>
     </div>
 </aside>
 

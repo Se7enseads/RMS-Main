@@ -11,6 +11,7 @@
 <?php endif ?>
 
 <form action="/items/create" method="POST">
+  <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
   <label>Name
     <input type="text" name="name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
   </label>

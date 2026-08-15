@@ -16,6 +16,25 @@ class Session
             'samesite' => 'Strict',
         ]);
         session_start();
+        
+        self::csrfToken();
+    }
+
+    public static function csrfToken(): string
+    {
+        if (!self::has('_csrf_token')) {
+            self::set('_csrf_token', bin2hex(random_bytes(32)));
+        }
+        return self::get('_csrf_token');
+    }
+
+    public static function validateCsrfToken(?string $token): bool
+    {
+        $storedToken = self::get('_csrf_token');
+        if (!$storedToken || !$token) {
+            return false;
+        }
+        return hash_equals($storedToken, $token);
     }
 
     public static function get(string $key): mixed

@@ -3,8 +3,8 @@
 namespace App\Routes;
 
 use App\Controllers\MenuItemController;
-use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 $itemRoutes = new RouteCollection();
 
@@ -24,6 +24,7 @@ $itemRoutes->add('items_save', new Route('/items/create', [
     '_controller' => [MenuItemController::class, 'save'],
     '_auth' => true,
     '_permission' => 'menu.create',
+    '_csrf' => true,
 ], methods: ['POST']));
 
 return $itemRoutes;

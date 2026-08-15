@@ -11,6 +11,7 @@
 <?php endif ?>
 
 <form action="/users/update/<?= $user->id ?>" method="POST">
+  <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
   <label>Employee Number
     <input type="text" name="employee_num" value="<?= htmlspecialchars($old['employee_num'] ?? $user->employeeNum) ?>" required>
   </label>

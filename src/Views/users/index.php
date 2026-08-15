@@ -25,6 +25,7 @@
           <td>
             <a href="/users/update/<?= $user->id ?>" class="button-outline">Edit</a>
             <form action="/users/deactivate/<?= $user->id ?>" method="POST">
+              <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
               <button type="submit" onclick="return confirm('Are you sure?')">Deactivate</button>
             </form>
           </td>

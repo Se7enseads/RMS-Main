@@ -49,7 +49,9 @@
                 <span id="cart-total">0.00</span>
             </div>
 
-            <form method="POST" action="/kiosk/order" id="order-form">
+            <form method="POST" action="/kiosk/order" id="order-form" onsubmit="return submitOrder()">
+                <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
+                <input type="hidden" name="items" id="order-items" value="[]">
                 <input type="hidden" name="order_type" id="order-type" value="DINE_IN">
                 <input type="hidden" name="table_id" id="order-table" value="">
                 <input type="hidden" name="items" id="order-items">
@@ -80,9 +82,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="button button-primary place-order-btn" onclick="return submitOrder()">Place
-                    Order
-                </button>
+                <button type="submit" class="button button-primary place-order-btn">Place Order</button>
             </form>
         </div>
 

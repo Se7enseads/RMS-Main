@@ -3,8 +3,8 @@
 namespace App\Routes;
 
 use App\Controllers\KioskController;
-use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 $kioskRoutes = new RouteCollection();
 
@@ -18,9 +18,11 @@ $kioskRoutes->add('kiosk_order', new Route('/kiosk/order', [
     '_auth' => true,
 ], methods: ['GET']));
 
+// TODO: Add automatic log out
 $kioskRoutes->add('kiosk_place_order', new Route('/kiosk/order', [
     '_controller' => [KioskController::class, 'placeOrder'],
     '_auth' => true,
+    '_csrf' => true,
 ], methods: ['POST']));
 
 return $kioskRoutes;

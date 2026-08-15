@@ -3,8 +3,8 @@
 namespace App\Routes;
 
 use App\Controllers\AuthController;
-use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 $authRoutes = new RouteCollection();
 
@@ -19,6 +19,7 @@ $authRoutes->add('login', new Route('/login', [
 $authRoutes->add('logout', new Route('/logout', [
     '_controller' => [AuthController::class, 'logout'],
     '_auth' => true,
-], methods: ['GET'])); // NOTE: should be a POST
+    '_csrf' => true,
+], methods: ['POST']));
 
 return $authRoutes;

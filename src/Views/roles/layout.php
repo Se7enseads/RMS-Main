@@ -36,7 +36,10 @@ $navItems = [
         <?php if ($userName !== '') : ?>
             <span class="header-user"><?= htmlspecialchars($userName) ?></span>
         <?php endif ?>
-        <a href="/logout">Logout</a>
+        <form method="POST" action="/logout" class="nav-logout">
+            <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
+            <button type="submit" class="nav-logout-btn">Logout</button>
+        </form>
     </nav>
 </header>
 <main><?= $slot ?></main>

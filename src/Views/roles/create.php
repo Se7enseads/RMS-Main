@@ -11,6 +11,7 @@
 <?php endif ?>
 
 <form action="/roles/create" method="POST">
+  <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
   <label>Role Name
     <input type="text" name="name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
   </label>

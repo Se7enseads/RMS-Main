@@ -2,10 +2,10 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Core\Session;
+use App\Core\Middleware;
 use App\Core\View;
-use App\Repositories\PermissionRepository;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
@@ -21,24 +21,24 @@ try {
     // get the parameters from the matched route
     $parameters = $matcher->match($request->getPathInfo());
 
-    // TODO: Refactor Auth behavior
-    if ($parameters['_auth'] ?? false) {
-        Session::start();
-        if (!Session::has('user_id')) {
-            header('Location: /login');
-            return;
-        }
+    // check if the request has a valid CSRF token
+    if (!Middleware::csrf($parameters)) {
+        http_response_code(400);
+        View::render('errors/400');
+        return;
     }
 
-    if ($parameters['_permission'] ?? false) {
-        Session::start();
-        $roleId = (int)Session::get('role_id');
-        $permissionRepo = new PermissionRepository();
-        if (!$roleId || !$permissionRepo->roleHasPermission($roleId, $parameters['_permission'])) {
-            http_response_code(403);
-            View::render('errors/403');
-            return;
-        }
+    // check if user is logged in if needed
+    if (!Middleware::auth($parameters)) {
+        header('Location: /login');
+        return;
+    }
+
+    // check if user has the right permissions for the current action
+    if (!Middleware::permissions($parameters)) {
+        http_response_code(403);
+        View::render('errors/403');
+        return;
     }
 
     // get the controller class and method from the parameters
@@ -54,6 +54,9 @@ try {
     // instantiate and call controller
     $controller = new $controllerClass();
     $controller->$method(...$args);
+} catch (MethodNotAllowedException $e) {
+    http_response_code(405);
+    View::render('errors/404');
 } catch (ResourceNotFoundException $e) {
     http_response_code(404);
     View::render('errors/404');

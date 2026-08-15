@@ -11,6 +11,7 @@
 <?php endif ?>
 
 <form action="/users/create" method="POST">
+  <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
   <!-- TODO: Errors from sql -->
 
   <label>Employee Number
