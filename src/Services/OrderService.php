@@ -62,7 +62,7 @@ class OrderService
 
         $order = $this->orderRepository->insertWithItems([
             'order_number' => $this->generateOrderNumber(),
-            'status' => 'OPEN',
+            'status' => 'PLACED',
             'type' => $type,
             'user_id' => $userId,
             'table_id' => $type === 'DINE_IN' ? $tableId : null,

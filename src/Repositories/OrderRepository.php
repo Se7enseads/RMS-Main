@@ -25,7 +25,7 @@ class OrderRepository
             FROM orders o
             LEFT JOIN tables t ON o.table_id = t.id
             LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.status IN ('OPEN', 'PLACED')
+            WHERE o.status = 'PLACED'
             ORDER BY o.created_at DESC
         ";
         $stmt = $this->db->query($sql);
@@ -54,8 +54,74 @@ class OrderRepository
 
     public function countOpenOrders(): int
     {
-        $stmt = $this->db->query("SELECT COUNT(*) FROM orders WHERE status IN ('OPEN', 'PLACED')");
+        $stmt = $this->db->query("SELECT COUNT(*) FROM orders WHERE status = 'PLACED'");
         return (int)$stmt->fetchColumn();
+    }
+
+    public function findWaitingForServiceToday(): array
+    {
+        $sql = "
+            SELECT o.*, t.number AS table_number, u.first_name AS user_name,
+                   EXISTS(SELECT 1 FROM payments p WHERE p.order_id = o.id) AS is_paid,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.status = 'PLACED'
+              AND DATE(o.created_at) = CURDATE()
+            ORDER BY o.created_at ASC
+        ";
+        $stmt = $this->db->query($sql);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    public function findServedToday(): array
+    {
+        $sql = "
+            SELECT o.*, t.number AS table_number, u.first_name AS user_name,
+                   EXISTS(SELECT 1 FROM payments p WHERE p.order_id = o.id) AS is_paid,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.status = 'SERVED'
+              AND DATE(o.created_at) = CURDATE()
+            ORDER BY o.created_at DESC
+        ";
+        $stmt = $this->db->query($sql);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    /**
+     * @return array<int, \App\Models\OrderItem>
+     */
+    public function findItemsByOrderId(int $orderId): array
+    {
+        $sql = "
+            SELECT oi.*, mi.name AS menu_item_name
+            FROM order_items oi
+            INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+            WHERE oi.order_id = :order_id
+            ORDER BY oi.id ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['order_id' => $orderId]);
+
+        return array_map([\App\Models\OrderItem::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    public function markServed(int $orderId): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE orders
+            SET status = 'SERVED'
+            WHERE id = :id AND status = 'PLACED'
+        ");
+        $stmt->execute(['id' => $orderId]);
+
+        return $stmt->rowCount() > 0;
     }
 
     public function countOrdersForDate(string $date): int

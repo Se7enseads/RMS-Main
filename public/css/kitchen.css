@@ -1,0 +1,166 @@
+/* ── Kitchen Display ── */
+
+.kitchen-body {
+    background: var(--bg);
+}
+
+.kitchen-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kitchen-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.kitchen-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.kitchen-updated {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.kitchen-dashboard h2 {
+    margin: 8px 0 0;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Receipt cards ── */
+
+.kitchen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.receipt-card {
+    background: #fff;
+    border: 1px dashed #9aa3af;
+    border-radius: 4px;
+    padding: 14px 16px 16px;
+    font-family: ui-monospace, "Courier New", monospace;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.receipt-store {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.receipt-order {
+    color: var(--text-muted);
+}
+
+.receipt-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.receipt-rule {
+    border-top: 1px dotted #9aa3af;
+    height: 0;
+}
+
+.receipt-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.receipt-items li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.receipt-item-name strong {
+    font-weight: 700;
+}
+
+.receipt-item-price {
+    white-space: nowrap;
+}
+
+.receipt-footer {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-top: 1px dotted #9aa3af;
+    padding-top: 8px;
+}
+
+.receipt-actions {
+    margin: 4px -16px -16px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 4px 4px;
+}
+
+.receipt-actions .button {
+    width: 100%;
+}
+
+/* ── Served history (collapsible) ── */
+
+.served-history {
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 12px 16px;
+}
+
+.served-history summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    color: var(--text-muted);
+}
+
+.served-history summary:hover {
+    color: var(--text);
+}
+
+.served-history[open] summary {
+    margin-bottom: 12px;
+}
+
+.served-card {
+    opacity: 0.85;
+}
+
+.served-card .receipt-footer span:first-child::after {
+    content: " — SERVED";
+    font-size: 0.75rem;
+    color: var(--success, #1a7f37);
+}

@@ -18,7 +18,7 @@ class AuthController
     public function loginForm(): void
     {
         if ($this->authService->isAuthenticated()) {
-            header('Location: ' . ($this->isWaiter() ? '/kiosk' : '/'));
+            header('Location: ' . $this->homePath());
             return;
         }
 
@@ -59,11 +59,7 @@ class AuthController
         }
 
         if ($result['success']) {
-            if ($result['user']->roleName === 'WAITER') {
-                header('Location: /kiosk');
-            } else {
-                header('Location: /');
-            }
+            header('Location: ' . $this->homePath($result['user']->roleName));
             return;
         }
 
@@ -79,8 +75,14 @@ class AuthController
         header('Location: /login');
     }
 
-    private function isWaiter(): bool
+    private function homePath(?string $roleName = null): string
     {
-        return Session::get('role_name') === 'WAITER';
+        $roleName = $roleName ?? Session::get('role_name');
+
+        return match ($roleName) {
+            'WAITER' => '/kiosk',
+            'HEAD CHEF' => '/kitchen',
+            default => '/',
+        };
     }
 }

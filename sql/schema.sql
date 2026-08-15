@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS orders
 (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     order_number VARCHAR(50)                                    NOT NULL UNIQUE,
-    status       ENUM ('OPEN','PLACED','COMPLETED','CANCELLED') NOT NULL,
+    status       ENUM ('PLACED','SERVED','PAYED','CANCELLED') NOT NULL,
     type         ENUM ('DINE_IN','TAKEAWAY','DELIVERY')         NOT NULL,
     staff_id      INT                                            NOT NULL,
     table_id     INT,

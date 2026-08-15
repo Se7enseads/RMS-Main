@@ -9,6 +9,7 @@ $navItems = [
         ['href' => '/items', 'label' => 'Items'],
         ['href' => '/users', 'label' => 'Users'],
         ['href' => '/roles', 'label' => 'Roles'],
+        ['href' => '/kitchen', 'label' => 'Kitchen'],
 ];
 ?>
 
