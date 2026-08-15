@@ -12,7 +12,6 @@
 
 <form action="/users/create" method="POST">
   <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
-  <!-- TODO: Errors from sql -->
 
   <label>Employee Number
     <input type="text" name="employee_num" value="<?= htmlspecialchars($old['employee_num'] ?? '') ?>" required>

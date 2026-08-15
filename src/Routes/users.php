@@ -33,7 +33,6 @@ $userRoutes->add('users_edit', new Route('/users/update/{id}', [
     '_permission' => 'users.update',
 ], methods: ['GET']));
 
-// TODO: implement this
 $userRoutes->add('users_update', new Route('/users/update/{id}', [
     '_controller' => [UserController::class, 'update'],
     '_auth' => true,
@@ -41,7 +40,6 @@ $userRoutes->add('users_update', new Route('/users/update/{id}', [
     '_csrf' => true,
 ], methods: ['POST']));
 
-// TODO: implement this
 $userRoutes->add('users_deactivate', new Route('/users/deactivate/{id}', [
     '_controller' => [UserController::class, 'deactivate'],
     '_auth' => true,

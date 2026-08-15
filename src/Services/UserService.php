@@ -49,6 +49,10 @@ class UserService
             return ['success' => false, 'errors' => ['employee_num' => 'Employee number already exists.']];
         }
 
+        if ($this->userRepository->findByNationalId($data['national_id'])) {
+            return ['success' => false, 'errors' => ['national_id' => 'National ID already exists.']];
+        }
+
         // Hash password
         $data['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
@@ -71,6 +75,11 @@ class UserService
         $existing = $this->userRepository->findByEmployeeNum($data['employee_num']);
         if ($existing && $existing->id !== $id) {
             return ['success' => false, 'errors' => ['employee_num' => 'Employee number already exists.']];
+        }
+
+        $existingNid = $this->userRepository->findByNationalId($data['national_id']);
+        if ($existingNid && $existingNid->id !== $id) {
+            return ['success' => false, 'errors' => ['national_id' => 'National ID already exists.']];
         }
 
         $user = $this->userRepository->update($id, $data);

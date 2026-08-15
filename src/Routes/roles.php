@@ -14,14 +14,12 @@ $roleRoutes->add('roles_index', new Route('/roles', [
     '_permission' => 'roles.view',
 ], methods: ['GET']));
 
-// TODO: this needs to be connected to permissions
 $roleRoutes->add('roles_create', new Route('/roles/create', [
     '_controller' => [RoleController::class, 'create'],
     '_auth' => true,
     '_permission' => 'roles.create',
 ], methods: ['GET']));
 
-// TODO: this needs to be connected to permissions
 $roleRoutes->add('roles_save', new Route('/roles/create', [
     '_controller' => [RoleController::class, 'save'],
     '_auth' => true,

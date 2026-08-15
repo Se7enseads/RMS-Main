@@ -78,6 +78,21 @@ class UserRepository
 
         return $row ? User::fromRow($row) : null;
     }
+
+    public function findByNationalId(string $nationalId): ?User
+    {
+        $sql = "
+            SELECT users.*, roles.name AS role_name
+            FROM users
+            LEFT JOIN roles ON users.role_id = roles.id
+            WHERE users.national_id = :national_id
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['national_id' => $nationalId]);
+        $row = $stmt->fetch();
+
+        return $row ? User::fromRow($row) : null;
+    }
     /**
      * @param array<int,mixed> $data
      */
