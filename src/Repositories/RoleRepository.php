@@ -15,8 +15,6 @@ class RoleRepository
         $this->db = Database::getConnection();
     }
 
-//    TODO: Reports must make sense
-
     public function findAll(): array
     {
         $stmt = $this->db->query("SELECT * FROM roles");

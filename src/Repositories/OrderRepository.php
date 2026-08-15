@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Core\Database;
 use App\Models\Order;
 use PDO;
+use Throwable;
 
 class OrderRepository
 {
@@ -54,14 +55,14 @@ class OrderRepository
     public function countOpenOrders(): int
     {
         $stmt = $this->db->query("SELECT COUNT(*) FROM orders WHERE status IN ('OPEN', 'PLACED')");
-        return (int) $stmt->fetchColumn();
+        return (int)$stmt->fetchColumn();
     }
 
     public function countOrdersForDate(string $date): int
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM orders WHERE DATE(created_at) = :date");
         $stmt->execute(['date' => $date]);
-        return (int) $stmt->fetchColumn();
+        return (int)$stmt->fetchColumn();
     }
 
     public function sumRevenueForDate(string $date): float
@@ -72,7 +73,7 @@ class OrderRepository
              WHERE DATE(created_at) = :date AND method <> 'REFUND'"
         );
         $stmt->execute(['date' => $date]);
-        return (float) $stmt->fetchColumn();
+        return (float)$stmt->fetchColumn();
     }
 
     public function findById(int $id): ?Order
@@ -94,8 +95,9 @@ class OrderRepository
     /**
      * Insert an order and its items in a transaction.
      *
-     * @param array{order_number: string, status: string, type: string, user_id: int, table_id: int, total_amount: float} $order
+     * @param array{order_number: string, status: string, type: string, user_id: int, table_id: int|null, total_amount: float} $order
      * @param array<int, array{menu_item_id: int, price_at_time: float, quantity: int}> $items
+     * @throws Throwable
      */
     public function insertWithItems(array $order, array $items): Order
     {
@@ -108,7 +110,7 @@ class OrderRepository
             ");
             $stmt->execute($order);
 
-            $orderId = (int) $this->db->lastInsertId();
+            $orderId = (int)$this->db->lastInsertId();
 
             $itemStmt = $this->db->prepare("
                 INSERT INTO order_items (order_id, menu_item_id, price_at_time, quantity)
@@ -124,7 +126,7 @@ class OrderRepository
             }
 
             $this->db->commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->db->rollBack();
             throw $e;
         }

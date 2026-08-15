@@ -18,7 +18,7 @@ class AuthController
     public function loginForm(): void
     {
         if ($this->authService->isAuthenticated()) {
-            header('Location: /');
+            header('Location: ' . ($this->isWaiter() ? '/kiosk' : '/'));
             return;
         }
 
@@ -77,5 +77,10 @@ class AuthController
     {
         $this->authService->logout();
         header('Location: /login');
+    }
+
+    private function isWaiter(): bool
+    {
+        return Session::get('role_name') === 'WAITER';
     }
 }

@@ -1,22 +1,25 @@
+<?php
+
+use App\Core\Session;
+
+if (!empty($error)) : ?>
+    <div class="errors"><p><?= htmlspecialchars($error) ?></p></div>
+<?php endif ?>
+
 <section class="kiosk-order">
-
-    <?php if (!empty($error)) : ?>
-        <div class="errors"><p><?= htmlspecialchars($error) ?></p></div>
-    <?php endif ?>
-
     <div class="order-layout">
-
+        <!-- Menu Panel -->
         <div class="menu-panel">
             <h1>Place Order</h1>
-            <!--             TODO: Add an all button to show all the fetched menu items-->
+
             <div class="menu-tabs">
-                <?php $first = true;
-                foreach ($menu as $group) : ?>
-                    <button type="button"
-                            class="menu-tab <?= $first ? 'active' : '' ?>"
-                            data-cat="<?= $group['category']->id ?>"
-                            onclick="showCategory(this)"><?= htmlspecialchars($group['category']->name) ?></button>
-                    <?php $first = false; endforeach ?>
+                <button type="button" class="menu-tab active" data-cat="all" onclick="filterCategory(this)">All</button>
+                <?php foreach ($menu as $group) : ?>
+                    <button type="button" class="menu-tab" data-cat="<?= $group['category']->id ?>"
+                            onclick="filterCategory(this)">
+                        <?= htmlspecialchars($group['category']->name) ?>
+                    </button>
+                <?php endforeach ?>
             </div>
 
             <div class="menu-items">
@@ -26,7 +29,7 @@
                             <button type="button" class="menu-item"
                                     onclick="addToCart(<?= $item->id ?>, '<?= htmlspecialchars($item->name, ENT_QUOTES) ?>', <?= $item->price ?>)">
                                 <span class="menu-item-name"><?= htmlspecialchars($item->name) ?></span>
-                                <span class="menu-item-price"><?= number_format($item->price, 2) ?></span>
+                                <span class="menu-item-price">KES <?= number_format($item->price, 2) ?></span>
                             </button>
                         <?php endforeach ?>
                         <?php if (empty($group['items'])) : ?>
@@ -37,8 +40,9 @@
             </div>
         </div>
 
+        <!-- Receipt / Cart Panel -->
         <div class="cart-panel">
-            <h2>Current Order</h2>
+            <h2>Order Preview</h2>
 
             <div id="cart-items" class="cart-items">
                 <p class="muted">No items selected.</p>
@@ -54,7 +58,6 @@
                 <input type="hidden" name="items" id="order-items" value="[]">
                 <input type="hidden" name="order_type" id="order-type" value="DINE_IN">
                 <input type="hidden" name="table_id" id="order-table" value="">
-                <input type="hidden" name="items" id="order-items">
 
                 <div class="order-options">
                     <label class="option">
@@ -76,7 +79,8 @@
                     <select id="table-select" onchange="document.getElementById('order-table').value = this.value">
                         <option value="">Select a table</option>
                         <?php foreach ($tables as $table) : ?>
-                            <option value="<?= $table->id ?>">Table <?= $table->number ?> (<?= $table->capacity ?>)
+                            <option value="<?= $table->id ?>">Table <?= htmlspecialchars($table->number) ?>
+                                (Cap: <?= $table->capacity ?>)
                             </option>
                         <?php endforeach ?>
                     </select>
@@ -85,19 +89,19 @@
                 <button type="submit" class="button button-primary place-order-btn">Place Order</button>
             </form>
         </div>
-
     </div>
 </section>
 
 <script>
     let cart = {};
 
-    function showCategory(btn) {
+    function filterCategory(btn) {
         document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
-        let cat = btn.dataset.cat;
+
+        const cat = btn.dataset.cat;
         document.querySelectorAll('.menu-category').forEach(c => {
-            c.style.display = c.dataset.cat === cat ? '' : 'none';
+            c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
         });
     }
 

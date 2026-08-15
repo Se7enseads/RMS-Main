@@ -45,4 +45,19 @@ class PermissionRepository
 
         return (int) $stmt->fetchColumn() > 0;
     }
+
+    public function roleHasPermissionByName(string $roleName, string $permission): bool
+    {
+        $sql = "
+            SELECT COUNT(*)
+            FROM role_permissions rp
+            INNER JOIN permissions p ON p.id = rp.permission_id
+            INNER JOIN roles r ON r.id = rp.role_id
+            WHERE r.name = :role_name AND p.name = :name
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['role_name' => $roleName, 'name' => $permission]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
 }

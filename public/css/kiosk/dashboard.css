@@ -1,0 +1,133 @@
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.kiosk-dashboard h2 {
+    margin: 24px 0 12px;
+    font-size: 1.05rem;
+    color: var(--primary-dark);
+}
+
+.date-filter {
+    display: flex;
+    gap: 8px;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+
+.date-filter input[type="date"] {
+    margin-top: 0;
+}
+
+.date-filter .button-outline {
+    align-self: center;
+}
+
+.empty-note,
+.muted {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.order-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+}
+
+.order-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-left: 4px solid var(--primary-light);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+}
+
+.order-card.open {
+    border-left-color: var(--accent);
+}
+
+.voided-card {
+    opacity: 0.6;
+    border-left-color: var(--text-muted);
+}
+
+.order-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.order-number {
+    font-weight: 700;
+    color: var(--text);
+}
+
+.order-amount {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.order-details {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.order-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--accent-light);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+.order-payment {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--secondary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.dashboard-section h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.section-title.unpaid {
+    color: var(--danger);
+}
+
+.section-title.paid {
+    color: var(--secondary);
+}
+
+.section-title.voided {
+    color: var(--text-muted);
+}

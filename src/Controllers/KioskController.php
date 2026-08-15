@@ -4,9 +4,9 @@ namespace App\Controllers;
 
 use App\Core\Session;
 use App\Core\View;
+use App\Repositories\TableRepository;
 use App\Services\MenuService;
 use App\Services\OrderService;
-use App\Repositories\TableRepository;
 
 class KioskController
 {
@@ -66,9 +66,9 @@ class KioskController
 
     public function placeOrder(): void
     {
-        $userId = (int) Session::get('user_id');
+        $userId = (int)Session::get('user_id');
         $type = $_POST['order_type'] ?? 'DINE_IN';
-        $tableId = (int) ($_POST['table_id'] ?? 0);
+        $tableId = (int)($_POST['table_id'] ?? 0);
         $itemsJson = $_POST['items'] ?? '[]';
 
         $items = json_decode($itemsJson, true);

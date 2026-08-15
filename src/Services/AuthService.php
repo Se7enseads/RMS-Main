@@ -27,7 +27,7 @@ class AuthService
             return ['success' => false, 'error' => 'Invalid credentials.'];
         }
 
-        $this->startSession($user, 'password');
+        self::startSession($user);
 
         return ['success' => true, 'user' => $user];
     }
@@ -40,17 +40,16 @@ class AuthService
             return ['success' => false, 'error' => 'Invalid PIN.'];
         }
 
-        $this->startSession($user, 'pin');
+        self::startSession($user);
 
         return ['success' => true, 'user' => $user];
     }
 
-    private function startSession(User $user, string $type): void
+    private function startSession(User $user): void
     {
         Session::set('user_id', $user->id);
         Session::set('user_name', $user->getFullName());
-        Session::set('role_id', $user->roleId);
-        Session::set('login_type', $type);
+        Session::set('role_name', $user->roleName);
     }
 
     public function logout(): void

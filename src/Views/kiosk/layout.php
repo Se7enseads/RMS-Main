@@ -17,7 +17,7 @@ $userName = Session::get('user_name') ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RMS - Kiosk</title>
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/kiosk.css">
+    <link rel="stylesheet" href="/css/kiosk/main.css">
 </head>
 <body class="kiosk-body">
 
@@ -43,7 +43,7 @@ $userName = Session::get('user_name') ?? '';
 </aside>
 
 <div class="kiosk-main">
-    <main class="kiosk-content"><?= $slot ?></main>
+    <main class="kiosk-content"><?= $slot ?? '<h1> No Content</h1>' ?></main>
 </div>
 
 </body>

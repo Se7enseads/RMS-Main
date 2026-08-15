@@ -65,7 +65,7 @@ class OrderService
             'status' => 'OPEN',
             'type' => $type,
             'user_id' => $userId,
-            'table_id' => $tableId,
+            'table_id' => $type === 'DINE_IN' ? $tableId : null,
             'total_amount' => round($total, 2),
         ], $orderItems);
 

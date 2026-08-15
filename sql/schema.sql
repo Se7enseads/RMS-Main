@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS orders
     status       ENUM ('OPEN','PLACED','COMPLETED','CANCELLED') NOT NULL,
     type         ENUM ('DINE_IN','TAKEAWAY','DELIVERY')         NOT NULL,
     staff_id      INT                                            NOT NULL,
-    table_id     INT                                            NOT NULL,
+    table_id     INT,
     total_amount DECIMAL(12, 2)                                 NOT NULL,
     closed_at    TIMESTAMP,
     created_at   TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
