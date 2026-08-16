@@ -283,3 +283,92 @@ form button[type='submit'] {
 .card a {
     font-weight: 600;
 }
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    background: var(--primary-dark);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.sidebar-brand {
+    padding: 20px 24px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-brand a {
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 12px 24px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.95rem;
+    border-left: 3px solid transparent;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-left-color: var(--secondary-light);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    padding: 16px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-footer form {
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    max-width: none;
+}
+
+.sidebar-footer button.sidebar-link {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font);
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.sidebar-footer button.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.sidebar-user {
+    padding: 6px 24px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
