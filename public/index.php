@@ -12,6 +12,8 @@ use Symfony\Component\Routing\RequestContext;
 
 $routes = require __DIR__ . '/../src/routes.php';
 
+date_default_timezone_set("Africa/Nairobi");
+
 // get and match the current HTTP Request to a route from $routes
 $request = Request::createFromGlobals();
 $context = new RequestContext()->fromRequest($request);

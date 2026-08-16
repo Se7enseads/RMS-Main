@@ -1,16 +1,28 @@
 # TODOs
+ - [ ] Outline in the scope that it does not cover kibandas
+ - [ ] Define Small and Medium Enterprises
 
 ## Feature List TODOs
 
 1. [ ] Add Admin close day button
     - [ ] Role Creation should include a selection for available permissions
-2. [ ] Add Kitchen Display
+    - [ ] Variance display
+        - [ ] After daily stock-take a variance is performed to
+2. [ ] Store display
+    - [ ] Insert the individual ingredients to the store
+    - [ ] Store admin page.
+        - [ ] Variance display
+2. [x] Add Kitchen Display
+    - [ ] food should be displayed here
+3. [ ] Add Bar Display
+    - [ ] Drinks should go to the bar display
 3. [ ] Add Cashier Display
-    - [ ] Add Payment Display and receipt printing
+    - [ ] Add Payment Display and receipt printing (integrate Daraja API)
 4. [ ] Add Reports in Admin
     - Use Tabulator for table printing and download/export functions.
 5. [ ] Add Kiosk:
     - [ ] Add bill printing
+    - [ ] Voiding of orders by (Owner, Manager if right is given)
     - [ ] Settings Page
     - [ ] Payment display for the day
     - [ ] Automatic log out (session timeout)
@@ -29,6 +41,10 @@
     - [ ] Dismissable errors
     - [ ] Timeout frontend errors
     - [ ] delete and reset state, if session is wrong
+
+- [ ] Testing
+    - [ ] Unit tests
+    - [ ] HTTP tests
 
 ## CHECKLIST
 

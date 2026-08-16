@@ -14,6 +14,7 @@ $userName = Session::get('user_name') ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--    <meta http-equiv="Refresh" content="3">-->
     <title>RMS - Kitchen Display</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/kitchen.css">

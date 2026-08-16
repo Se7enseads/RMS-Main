@@ -1,3 +1,8 @@
+<?php
+
+use App\Core\Session;
+
+?>
 <section class="kitchen-dashboard">
 
     <div class="kitchen-header">
@@ -25,7 +30,7 @@
                         <?php foreach ($items[$order->id] ?? [] as $item) : ?>
                             <li>
                                 <span class="receipt-item-name">
-                                    <strong><?= (int) $item->quantity ?>x</strong> <?= htmlspecialchars($item->menuItemName) ?>
+                                    <strong><?= (int)$item->quantity ?>x</strong> <?= htmlspecialchars($item->menuItemName) ?>
                                 </span>
                                 <span class="receipt-item-price"><?= number_format($item->priceAtTime * $item->quantity, 2) ?></span>
                             </li>
@@ -37,7 +42,7 @@
                         <span class="receipt-total"><?= number_format($order->totalAmount, 2) ?> KES</span>
                     </footer>
                     <form method="POST" action="/kitchen/serve/<?= $order->id ?>" class="receipt-actions">
-                        <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
+                        <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
                         <button type="submit" class="button button-primary">Mark as Served</button>
                     </form>
                 </article>
@@ -46,7 +51,7 @@
     <?php endif ?>
 
     <details class="served-history">
-        <summary>Served Orders (<?= (int) $servedCount ?>)</summary>
+        <summary>Served Orders (<?= (int)$servedCount ?>)</summary>
         <?php if (empty($served)) : ?>
             <p class="muted">No served orders today.</p>
         <?php else : ?>
@@ -66,7 +71,7 @@
                             <?php foreach ($items[$order->id] ?? [] as $item) : ?>
                                 <li>
                                     <span class="receipt-item-name">
-                                        <strong><?= (int) $item->quantity ?>x</strong> <?= htmlspecialchars($item->menuItemName) ?>
+                                        <strong><?= (int)$item->quantity ?>x</strong> <?= htmlspecialchars($item->menuItemName) ?>
                                     </span>
                                     <span class="receipt-item-price"><?= number_format($item->priceAtTime * $item->quantity, 2) ?></span>
                                 </li>
