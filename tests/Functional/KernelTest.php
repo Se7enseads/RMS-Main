@@ -188,6 +188,101 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame(403, $response->getStatusCode());
     }
 
+    public function testWaiterForbiddenFromBar(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/bar');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testHeadChefForbiddenFromBar(): void
+    {
+        $this->loginAs('HEAD CHEF', 3);
+
+        $response = $this->handle('GET', '/bar');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testBartenderPinLoginRedirectsToBar(): void
+    {
+        $response = $this->handle('POST', '/login', [
+            'login_type' => 'pin',
+            'pin' => '9012',
+        ]);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/bar', $response->headers->get('Location'));
+    }
+
+    public function testBartenderCanViewBar(): void
+    {
+        $this->loginAs('BARTENDER', 4);
+
+        $response = $this->handle('GET', '/bar');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Bar Display', $response->getContent());
+    }
+
+    public function testManagerCanViewBar(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/bar');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Bar Display', $response->getContent());
+    }
+
+    public function testBartenderBarOrderPageShowsOnlyDrinks(): void
+    {
+        $this->loginAs('BARTENDER', 4);
+
+        $response = $this->handle('GET', '/bar/order');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Place Order', $response->getContent());
+        $this->assertStringContainsString('Soda', $response->getContent());
+        $this->assertStringNotContainsString('Chicken Soup', $response->getContent());
+    }
+
+    public function testBartenderCanPlaceDrinksOrderFromBar(): void
+    {
+        $this->loginAs('BARTENDER', 4);
+
+        $response = $this->handle('POST', '/bar/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":2,"quantity":2}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/bar', $response->headers->get('Location'));
+
+        // order appears on the bar display
+        $response = $this->handle('GET', '/bar');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Mark as Served', $response->getContent());
+    }
+
+    public function testBarOrderRejectsFoodItems(): void
+    {
+        $this->loginAs('BARTENDER', 4);
+
+        $response = $this->handle('POST', '/bar/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":1}]',
+        ]);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('not served at the bar', $response->getContent());
+    }
+
     public function testManagerCanViewKitchen(): void
     {
         $this->loginAs('MANAGER');
@@ -217,7 +312,7 @@ class KernelTest extends DatabaseTestCase
             'csrf_token' => $this->csrfToken(),
             'order_type' => 'DINE_IN',
             'table_id' => 1,
-            'items' => '[{"menu_item_id":1,"quantity":2},{"menu_item_id":2,"quantity":1}]',
+            'items' => '[{"menu_item_id":1,"quantity":2}]',
         ]);
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame('/kiosk', $response->headers->get('Location'));
@@ -244,6 +339,86 @@ class KernelTest extends DatabaseTestCase
         $this->assertStringContainsString('Served Orders (1)', $response->getContent());
 
         // order no longer in kiosk open orders
+        $response = $this->handle('GET', '/kiosk');
+        $this->assertStringContainsString('No open orders', $response->getContent());
+    }
+
+    public function testBarOrderFlowEndToEnd(): void
+    {
+        $this->loginAs('MANAGER');
+
+        // place a drinks-only order via the kiosk
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":2,"quantity":1}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+
+        // drinks-only order is NOT on the kitchen display
+        $response = $this->handle('GET', '/kitchen');
+        $this->assertStringContainsString('No orders waiting', $response->getContent());
+
+        // but it is on the bar display
+        $response = $this->handle('GET', '/bar');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Mark as Served', $response->getContent());
+
+        // serve it from the bar
+        $response = $this->handle('POST', "/bar/serve/$orderId", [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/bar', $response->headers->get('Location'));
+
+        $response = $this->handle('GET', '/bar');
+        $this->assertStringContainsString('Served Orders (1)', $response->getContent());
+    }
+
+    public function testMixedOrderSplitsAcrossKitchenAndBar(): void
+    {
+        $this->loginAs('MANAGER');
+
+        // food + drink on the same order
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":1},{"menu_item_id":2,"quantity":1}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+
+        // kitchen shows only the food, bar shows only the drink
+        $response = $this->handle('GET', '/kitchen');
+        $this->assertStringContainsString('Chicken Soup', $response->getContent());
+        $this->assertStringNotContainsString('Soda', $response->getContent());
+
+        $response = $this->handle('GET', '/bar');
+        $this->assertStringContainsString('Soda', $response->getContent());
+        $this->assertStringNotContainsString('Chicken Soup', $response->getContent());
+
+        // serving at the kitchen keeps the order open until the bar serves too
+        $response = $this->handle('POST', "/kitchen/serve/$orderId", [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/kiosk');
+        $this->assertStringContainsString('PLACED', $response->getContent());
+
+        // bar serves -> order fully served
+        $response = $this->handle('POST', "/bar/serve/$orderId", [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
         $response = $this->handle('GET', '/kiosk');
         $this->assertStringContainsString('No open orders', $response->getContent());
     }

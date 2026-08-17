@@ -83,6 +83,7 @@ class AuthController
         return match ($roleName) {
             'WAITER' => '/kiosk',
             'HEAD CHEF' => '/kitchen',
+            'BARTENDER' => '/bar',
             default => '/',
         };
     }

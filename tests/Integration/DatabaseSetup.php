@@ -86,9 +86,11 @@ class DatabaseSetup
         $waiterRoleId = (int) $pdo->lastInsertId();
         $stmt->execute(['HEAD CHEF']);
         $chefRoleId = (int) $pdo->lastInsertId();
+        $stmt->execute(['BARTENDER']);
+        $bartenderRoleId = (int) $pdo->lastInsertId();
 
         $permissions = [
-            'dashboard.view', 'kitchen.view', 'users.view', 'users.create',
+            'dashboard.view', 'kitchen.view', 'bar.view', 'users.view', 'users.create',
             'users.update', 'users.deactivate', 'roles.view', 'roles.create',
             'menu.view', 'menu.create',
         ];
@@ -104,6 +106,7 @@ class DatabaseSetup
             $grantStmt->execute([$managerRoleId, $permissionId]);
         }
         $grantStmt->execute([$chefRoleId, $permissionIds['kitchen.view']]);
+        $grantStmt->execute([$bartenderRoleId, $permissionIds['bar.view']]);
 
         $userStmt = $pdo->prepare(
             'INSERT INTO users (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
@@ -112,16 +115,20 @@ class DatabaseSetup
         $userStmt->execute(['MGR001', 'Manager', 'Main', '30000001', '1111', password_hash('manager123', PASSWORD_BCRYPT), $managerRoleId]);
         $userStmt->execute(['WTR001', 'Brian', 'Otieno', '222222', '1234', null, $waiterRoleId]);
         $userStmt->execute(['CHF001', 'Chef', 'Mkuu', 'CHEF01', '5678', null, $chefRoleId]);
+        $userStmt->execute(['BTR001', 'Bar', 'Tender', 'BTR001', '9012', null, $bartenderRoleId]);
 
-        $catStmt = $pdo->prepare('INSERT INTO menu_categories (name) VALUES (?)');
-        $catStmt->execute(['Mains']);
+        $catStmt = $pdo->prepare('INSERT INTO menu_categories (name, station) VALUES (?, ?)');
+        $catStmt->execute(['Mains', 'KITCHEN']);
         $mainsId = (int) $pdo->lastInsertId();
-        $catStmt->execute(['Drinks']);
+        $catStmt->execute(['Drinks', 'BAR']);
         $drinksId = (int) $pdo->lastInsertId();
+        $catStmt->execute(['Hot Beverages', 'KITCHEN']);
+        $hotId = (int) $pdo->lastInsertId();
 
         $itemStmt = $pdo->prepare('INSERT INTO menu_items (name, price, category_id) VALUES (?, ?, ?)');
         $itemStmt->execute(['Chicken Soup', 250.00, $mainsId]);
         $itemStmt->execute(['Soda', 100.00, $drinksId]);
+        $itemStmt->execute(['Drip Coffee', 200.00, $hotId]);
 
         $tableStmt = $pdo->prepare('INSERT INTO tables (number, capacity) VALUES (?, ?)');
         $tableStmt->execute([1, 4]);

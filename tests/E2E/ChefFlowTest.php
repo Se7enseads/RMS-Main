@@ -6,7 +6,7 @@ class ChefFlowTest extends BrowserTestCase
 {
     public function testChefSeesPlacedOrderAndMarksItServed(): void
     {
-        $orderId = $this->placeOrderViaKiosk('1234', 1);
+        $orderId = $this->placeOrderViaKiosk('1234', 1, ['Chicken Soup']);
 
         try {
             $orderNumber = $this->liveDb()

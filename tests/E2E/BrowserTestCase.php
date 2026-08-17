@@ -48,13 +48,14 @@ abstract class BrowserTestCase extends PlaywrightTestCase
         $this->page->locator('#panel-password button[type="submit"]')->click();
     }
 
-    protected function placeOrderViaKiosk(string $pin, int $tableId): int
+    protected function placeOrderViaKiosk(string $pin, int $tableId, array $itemNames = ['Chicken Soup', 'Soda']): int
     {
         $this->loginWithPin($pin);
 
         $this->page->goto($this->baseUrl() . '/kiosk/order');
-        $this->page->locator('.menu-item')->filter(['hasText' => 'Chicken Soup'])->click();
-        $this->page->locator('.menu-item')->filter(['hasText' => 'Soda'])->click();
+        foreach ($itemNames as $itemName) {
+            $this->page->locator('.menu-item')->filter(['hasText' => $itemName])->click();
+        }
         $this->page->locator('#table-select')->selectOption((string)$tableId);
         $this->page->locator('.place-order-btn')->click();
 

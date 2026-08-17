@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS menu_categories
     name       VARCHAR(100) NOT NULL,
     parent_id  INT,
     active     BOOLEAN   DEFAULT TRUE,
+    station    ENUM('KITCHEN', 'BAR') NOT NULL DEFAULT 'KITCHEN',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -173,6 +174,7 @@ CREATE TABLE IF NOT EXISTS order_items
     menu_item_id  INT,
     price_at_time DECIMAL(12, 2) NOT NULL,
     quantity      INT            NOT NULL,
+    served        TINYINT(1)     NOT NULL DEFAULT 0,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (order_id) REFERENCES orders (id),

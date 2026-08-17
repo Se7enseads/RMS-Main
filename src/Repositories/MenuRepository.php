@@ -16,11 +16,19 @@ class MenuRepository
         $this->db = Database::getConnection();
     }
 
-    public function findAllActiveCategories(): array
+    public function findAllActiveCategories(?string $station = null): array
     {
-        $stmt = $this->db->query(
-            "SELECT * FROM menu_categories WHERE active = 1 ORDER BY name"
-        );
+        $sql = "SELECT * FROM menu_categories WHERE active = 1";
+        if ($station !== null) {
+            $sql .= " AND station = :station";
+        }
+        $sql .= " ORDER BY name";
+
+        $stmt = $this->db->prepare($sql);
+        if ($station !== null) {
+            $stmt->bindValue('station', $station);
+        }
+        $stmt->execute();
 
         return array_map([MenuCategory::class, 'fromRow'], $stmt->fetchAll());
     }
@@ -53,16 +61,24 @@ class MenuRepository
         return $this->findItemById((int) $this->db->lastInsertId());
     }
 
-    public function findAllActiveItems(): array
+    public function findAllActiveItems(?string $station = null): array
     {
         $sql = "
             SELECT mi.*, mc.name AS category_name
             FROM menu_items mi
             LEFT JOIN menu_categories mc ON mi.category_id = mc.id
             WHERE mi.active = 1
-            ORDER BY mi.name
         ";
-        $stmt = $this->db->query($sql);
+        if ($station !== null) {
+            $sql .= " AND mc.station = :station";
+        }
+        $sql .= " ORDER BY mi.name";
+
+        $stmt = $this->db->prepare($sql);
+        if ($station !== null) {
+            $stmt->bindValue('station', $station);
+        }
+        $stmt->execute();
 
         return array_map([MenuItem::class, 'fromRow'], $stmt->fetchAll());
     }

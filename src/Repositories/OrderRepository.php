@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Order;
+use App\Models\OrderItem;
 use PDO;
 use Throwable;
 
@@ -58,7 +59,7 @@ class OrderRepository
         return (int)$stmt->fetchColumn();
     }
 
-    public function findWaitingForServiceToday(): array
+    public function findWaitingForStationToday(string $station): array
     {
         $sql = "
             SELECT o.*, t.number AS table_number, u.first_name AS user_name,
@@ -69,9 +70,19 @@ class OrderRepository
             LEFT JOIN users u ON o.user_id = u.id
             WHERE o.status = 'PLACED'
               AND DATE(o.created_at) = CURDATE()
+              AND EXISTS (
+                  SELECT 1
+                  FROM order_items oi
+                  INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+                  INNER JOIN menu_categories mc ON mc.id = mi.category_id
+                  WHERE oi.order_id = o.id
+                    AND oi.served = 0
+                    AND mc.station = :station
+              )
             ORDER BY o.created_at ASC
         ";
-        $stmt = $this->db->query($sql);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['station' => $station]);
 
         return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
     }
@@ -95,7 +106,7 @@ class OrderRepository
     }
 
     /**
-     * @return array<int, \App\Models\OrderItem>
+     * @return array<int, OrderItem>
      */
     public function findItemsByOrderId(int $orderId): array
     {
@@ -109,19 +120,68 @@ class OrderRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['order_id' => $orderId]);
 
-        return array_map([\App\Models\OrderItem::class, 'fromRow'], $stmt->fetchAll());
+        return array_map([OrderItem::class, 'fromRow'], $stmt->fetchAll());
     }
 
-    public function markServed(int $orderId): bool
+    /**
+     * @return array<int, OrderItem>
+     */
+    public function findUnservedItemsByOrderIdAndStation(int $orderId, string $station): array
+    {
+        $sql = "
+            SELECT oi.*, mi.name AS menu_item_name
+            FROM order_items oi
+            INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+            INNER JOIN menu_categories mc ON mc.id = mi.category_id
+            WHERE oi.order_id = :order_id
+              AND oi.served = 0
+              AND mc.station = :station
+            ORDER BY oi.id ASC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['order_id' => $orderId, 'station' => $station]);
+
+        return array_map([OrderItem::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    /**
+     * Marks the station's items as served and transitions the order to
+     * SERVED once every item on the order has been served.
+     */
+    public function markStationServed(int $orderId, string $station): void
     {
         $stmt = $this->db->prepare("
+            UPDATE order_items oi
+            INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+            INNER JOIN menu_categories mc ON mc.id = mi.category_id
+            SET oi.served = 1
+            WHERE oi.order_id = :order_id
+              AND oi.served = 0
+              AND mc.station = :station
+              AND EXISTS (
+                  SELECT 1 FROM orders o
+                  WHERE o.id = oi.order_id AND o.status = 'PLACED'
+              )
+        ");
+        $stmt->execute(['order_id' => $orderId, 'station' => $station]);
+
+        $anyUnserved = $this->db->prepare("
+            SELECT COUNT(*)
+            FROM order_items oi
+            WHERE oi.order_id = :order_id AND oi.served = 0
+        ");
+        $anyUnserved->execute(['order_id' => $orderId]);
+
+        if ((int)$anyUnserved->fetchColumn() > 0) {
+            return;
+        }
+
+        $orderStmt = $this->db->prepare("
             UPDATE orders
             SET status = 'SERVED'
             WHERE id = :id AND status = 'PLACED'
         ");
-        $stmt->execute(['id' => $orderId]);
-
-        return $stmt->rowCount() > 0;
+        $orderStmt->execute(['id' => $orderId]);
     }
 
     public function countOrdersForDate(string $date): int

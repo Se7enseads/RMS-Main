@@ -18,10 +18,10 @@ class MenuService
     /**
      * @return array<int, array{category: MenuCategory, items: MenuItem[]}>
      */
-    public function getMenuGroupedByCategory(): array
+    public function getMenuGroupedByCategory(?string $station = null): array
     {
-        $categories = $this->menuRepository->findAllActiveCategories();
-        $items = $this->menuRepository->findAllActiveItems();
+        $categories = $this->menuRepository->findAllActiveCategories($station);
+        $items = $this->menuRepository->findAllActiveItems($station);
 
         $itemsByCategory = [];
         foreach ($items as $item) {
@@ -39,9 +39,9 @@ class MenuService
         return $grouped;
     }
 
-    public function getAllActiveItems(): array
+    public function getAllActiveItems(?string $station = null): array
     {
-        return $this->menuRepository->findAllActiveItems();
+        return $this->menuRepository->findAllActiveItems($station);
     }
 
     public function getAllCategories(): array

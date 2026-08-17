@@ -53,6 +53,11 @@ class KitchenServiceIntegrationTest extends DatabaseTestCase
         $waitingId = $this->insertOrder('PLACED');
         $servedId = $this->insertOrder('SERVED');
 
+        $this->db->exec(
+            "INSERT INTO order_items (order_id, menu_item_id, price_at_time, quantity)
+             VALUES ($waitingId, 1, 250.00, 1)"
+        );
+
         $data = $this->service->getKitchenData();
 
         $this->assertCount(1, $data['waiting']);

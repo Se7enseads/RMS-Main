@@ -4,6 +4,7 @@
 INSERT IGNORE INTO permissions (name) VALUES
     ('dashboard.view'),
     ('kitchen.view'),
+    ('bar.view'),
     ('users.view'),
     ('users.create'),
     ('users.update'),
@@ -26,3 +27,10 @@ INSERT IGNORE INTO roles (name) VALUES ('HEAD CHEF');
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
 WHERE r.name = 'HEAD CHEF' AND p.name IN ('kitchen.view');
+
+-- BARTENDER role: bar display only
+INSERT IGNORE INTO roles (name) VALUES ('BARTENDER');
+
+INSERT IGNORE INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
+WHERE r.name = 'BARTENDER' AND p.name IN ('bar.view');

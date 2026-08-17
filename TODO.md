@@ -13,9 +13,9 @@
     - [ ] Store admin page.
         - [ ] Variance display
 2. [x] Add Kitchen Display
-    - [ ] food should be displayed here
-3. [ ] Add Bar Display
-    - [ ] Drinks should go to the bar display
+    - [x] food should be displayed here
+3. [x] Add Bar Display
+    - [x] Drinks should go to the bar display
 3. [ ] Add Cashier Display
     - [ ] Add Payment Display and receipt printing (integrate Daraja API)
 4. [ ] Add Reports in Admin

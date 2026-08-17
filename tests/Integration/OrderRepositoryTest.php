@@ -83,26 +83,43 @@ class OrderRepositoryTest extends DatabaseTestCase
         }
     }
 
-    public function testFindWaitingForServiceTodayReturnsOnlyPlacedToday(): void
+    public function testFindWaitingForStationTodayReturnsOnlyPlacedToday(): void
     {
-        $this->insertOrder('PLACED');                                   // today, included
+        $placedToday = $this->insertOrder('PLACED');                    // today, kitchen item -> included
+        $this->insertItem($placedToday, 1, 250.00, 1);
         $this->insertOrder('PLACED', 'NOW() - INTERVAL 1 DAY');      // not today
         $this->insertOrder('SERVED');                                   // not placed
         $this->insertOrder('PAYED');                                    // not placed
         $this->insertOrder('CANCELLED');                                // not placed
 
-        $waiting = $this->repo->findWaitingForServiceToday();
+        $waiting = $this->repo->findWaitingForStationToday('KITCHEN');
 
         $this->assertCount(1, $waiting);
         $this->assertSame('PLACED', $waiting[0]->status);
     }
 
-    public function testFindWaitingForServiceTodayOrdersByOldestFirst(): void
+    public function testFindWaitingForStationTodayIgnoresOtherStationItems(): void
     {
-        $this->insertOrder('PLACED', 'NOW() - INTERVAL 10 MINUTE');
-        $this->insertOrder('PLACED');
+        // a PLACED order whose only item is a drink must NOT appear on the kitchen display
+        $drinksOnly = $this->insertOrder('PLACED');
+        $this->insertItem($drinksOnly, 2, 100.00, 1); // Soda (BAR)
 
-        $waiting = $this->repo->findWaitingForServiceToday();
+        $kitchen = $this->repo->findWaitingForStationToday('KITCHEN');
+        $this->assertSame([], $kitchen);
+
+        $bar = $this->repo->findWaitingForStationToday('BAR');
+        $this->assertCount(1, $bar);
+        $this->assertSame($drinksOnly, $bar[0]->id);
+    }
+
+    public function testFindWaitingForStationTodayOrdersByOldestFirst(): void
+    {
+        $older = $this->insertOrder('PLACED', 'NOW() - INTERVAL 10 MINUTE');
+        $newer = $this->insertOrder('PLACED');
+        $this->insertItem($older, 1, 250.00, 1);
+        $this->insertItem($newer, 1, 250.00, 1);
+
+        $waiting = $this->repo->findWaitingForStationToday('KITCHEN');
 
         $this->assertCount(2, $waiting);
         $this->assertLessThan($waiting[1]->id, $waiting[0]->id);
@@ -120,19 +137,45 @@ class OrderRepositoryTest extends DatabaseTestCase
         $this->assertSame('SERVED', $served[0]->status);
     }
 
-    public function testMarkServedTransitionsPlacedOrder(): void
+    public function testMarkStationServedTransitionsPlacedOrder(): void
     {
         $orderId = $this->insertOrder('PLACED');
 
-        $this->assertTrue($this->repo->markServed($orderId));
+        $this->repo->markStationServed($orderId, 'KITCHEN');
         $this->assertSame('SERVED', $this->repo->findById($orderId)->status);
     }
 
-    public function testMarkServedRejectsNonPlacedOrders(): void
+    public function testMarkStationServedKeepsOrderPlacedWhileOtherStationPending(): void
+    {
+        $orderId = $this->insertOrder('PLACED');
+        $this->insertItem($orderId, 1, 250.00, 1); // KITCHEN
+        $this->insertItem($orderId, 2, 100.00, 1); // BAR
+
+        $this->repo->markStationServed($orderId, 'KITCHEN');
+        $this->assertSame('PLACED', $this->repo->findById($orderId)->status);
+
+        $served = (int) $this->db->query(
+            "SELECT COUNT(*) FROM order_items WHERE order_id = $orderId AND served = 1"
+        )->fetchColumn();
+        $this->assertSame(1, $served);
+
+        $this->repo->markStationServed($orderId, 'BAR');
+        $this->assertSame('SERVED', $this->repo->findById($orderId)->status);
+    }
+
+    public function testMarkStationServedRejectsNonPlacedOrders(): void
     {
         foreach (['SERVED', 'PAYED', 'CANCELLED'] as $status) {
             $orderId = $this->insertOrder($status);
-            $this->assertFalse($this->repo->markServed($orderId), "Should not serve $status order");
+            $this->insertItem($orderId, 1, 250.00, 1);
+
+            $this->repo->markStationServed($orderId, 'KITCHEN');
+
+            $served = (int) $this->db->query(
+                "SELECT COUNT(*) FROM order_items WHERE order_id = $orderId AND served = 1"
+            )->fetchColumn();
+            $this->assertSame(0, $served, "Should not serve $status order");
+            $this->assertSame($status, $this->repo->findById($orderId)->status);
         }
     }
 

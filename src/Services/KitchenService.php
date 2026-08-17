@@ -9,10 +9,12 @@ use App\Repositories\OrderRepository;
 class KitchenService
 {
     private OrderRepository $orderRepository;
+    private string $station;
 
-    public function __construct()
+    public function __construct(string $station = 'KITCHEN')
     {
         $this->orderRepository = new OrderRepository();
+        $this->station = $station;
     }
 
     /**
@@ -20,11 +22,15 @@ class KitchenService
      */
     public function getKitchenData(): array
     {
-        $waiting = $this->orderRepository->findWaitingForServiceToday();
+        $waiting = $this->orderRepository->findWaitingForStationToday($this->station);
         $served = $this->orderRepository->findServedToday();
         $items = [];
 
-        foreach (array_merge($waiting, $served) as $order) {
+        foreach ($waiting as $order) {
+            $items[$order->id] = $this->orderRepository->findUnservedItemsByOrderIdAndStation($order->id, $this->station);
+        }
+
+        foreach ($served as $order) {
             $items[$order->id] = $this->orderRepository->findItemsByOrderId($order->id);
         }
 
@@ -51,7 +57,7 @@ class KitchenService
             return ['success' => false, 'error' => 'Only placed orders can be served.'];
         }
 
-        $this->orderRepository->markServed($orderId);
+        $this->orderRepository->markStationServed($orderId, $this->station);
         return ['success' => true];
     }
 }
