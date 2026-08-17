@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Redirect;
 use App\Core\View;
 use App\Services\MenuService;
 
@@ -32,7 +33,7 @@ class MenuItemController
         $result = $this->menuService->createItem($data);
 
         if ($result['success']) {
-            header('Location: /items');
+            Redirect::to('/items');
             return;
         }
 

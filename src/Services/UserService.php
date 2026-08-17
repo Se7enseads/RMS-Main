@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Repositories\UserRepository;
 use App\Repositories\RoleRepository;
+use App\Repositories\UserRepository;
 
 class UserService
 {
@@ -61,8 +61,8 @@ class UserService
     }
 
     /**
-     * @param array<int,mixed> $data
-     * @return array<string,mixed>
+     * @parameter array<int, mixed> $data
+     * @return array<string, mixed>
      */
     public function updateUser(int $id, array $data): array
     {
@@ -98,7 +98,7 @@ class UserService
     }
 
     /**
-     * @param array<int,mixed> $data
+     * @parameter array<int, mixed> $data
      * @param int|null $excludeId Skip uniqueness checks for this user
      * @return array<string,string>
      */
@@ -134,7 +134,7 @@ class UserService
 
         if (empty($data['role_id'])) {
             $errors['role_id'] = 'Role is required.';
-        } elseif (!$this->roleRepository->findById((int) $data['role_id'])) {
+        } elseif (!$this->roleRepository->findById((int)$data['role_id'])) {
             $errors['role_id'] = 'Selected role does not exist.';
         }
 

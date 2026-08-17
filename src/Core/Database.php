@@ -20,14 +20,14 @@ class Database
 
     private static function createConnection(): PDO
     {
-        $db_host = "127.0.0.1";
-        $db_name = "rms";
-        $db_port = "3306";
+        $db_host = getenv('RMS_DB_HOST') ?: "127.0.0.1";
+        $db_name = getenv('RMS_DB_NAME') ?: "rms";
+        $db_port = getenv('RMS_DB_PORT') ?: "3306";
 
         $dsn = "mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4";
 
-        $db_user = "user";
-        $db_pass = "password";
+        $db_user = getenv('RMS_DB_USER') ?: "user";
+        $db_pass = getenv('RMS_DB_PASS') ?: "password";
 
         try {
             return new PDO(

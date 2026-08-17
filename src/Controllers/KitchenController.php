@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Redirect;
 use App\Core\View;
 use App\Services\KitchenService;
 
@@ -22,6 +23,6 @@ class KitchenController
     public function serve(int $id): void
     {
         $result = $this->kitchenService->markServed($id);
-        header('Location: /kitchen');
+        Redirect::to('/kitchen');
     }
 }

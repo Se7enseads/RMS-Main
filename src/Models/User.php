@@ -5,30 +5,32 @@ namespace App\Models;
 class User
 {
     public function __construct(
-        public readonly int $id,
-        public readonly string $employeeNum,
-        public readonly string $firstName,
+        public readonly int     $id,
+        public readonly string  $employeeNum,
+        public readonly string  $firstName,
         public readonly ?string $middleName,
-        public readonly string $lastName,
-        public readonly string $nationalId,
-        public readonly string $pin,
+        public readonly string  $lastName,
+        public readonly string  $nationalId,
+        public readonly string  $pin,
         public readonly ?string $pinHash,
         public readonly ?string $passwordHash,
         public readonly ?string $phoneNumber,
-        public readonly int $roleId,
-        public readonly bool $active,
+        public readonly int     $roleId,
+        public readonly bool    $active,
         public readonly ?string $createdAt = null,
         public readonly ?string $updatedAt = null,
         public readonly ?string $roleName = null,
-    ) {}
+    )
+    {
+    }
 
     /**
-     * @param array<int,mixed> $row
+     * @param array<int, mixed> $row
      */
     public static function fromRow(array $row): self
     {
         return new self(
-            id: (int) $row['id'],
+            id: (int)$row['id'],
             employeeNum: $row['employee_num'],
             firstName: $row['first_name'],
             middleName: $row['middle_name'] ?? null,
@@ -38,8 +40,8 @@ class User
             pinHash: $row['pin_hash'] ?? null,
             passwordHash: $row['password_hash'] ?? null,
             phoneNumber: $row['phone_number'] ?? null,
-            roleId: (int) $row['role_id'],
-            active: (bool) $row['active'],
+            roleId: (int)$row['role_id'],
+            active: (bool)$row['active'],
             createdAt: $row['created_at'] ?? null,
             updatedAt: $row['updated_at'] ?? null,
             roleName: $row['role_name'] ?? null,
@@ -48,11 +50,15 @@ class User
 
     public function getFullName(): string
     {
-        return trim("{$this->firstName} {$this->middleName} {$this->lastName}");
+        return trim(implode(' ', array_filter([
+            $this->firstName,
+            $this->middleName,
+            $this->lastName,
+        ])));
     }
 
     /**
-     * @return array<string,mixed>
+     * @return array<string, mixed>
      */
     public function toArray(): array
     {

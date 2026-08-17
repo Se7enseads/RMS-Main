@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Repositories\OrderRepository;
 
 class KitchenService
@@ -14,7 +16,7 @@ class KitchenService
     }
 
     /**
-     * @return array{waiting: array<int, \App\Models\Order>, served: array<int, \App\Models\Order>, servedCount: int, items: array<int, array<int, \App\Models\OrderItem>>}
+     * @return array{waiting: array<int, Order>, served: array<int, Order>, servedCount: int, items: array<int, array<int, OrderItem>>}
      */
     public function getKitchenData(): array
     {

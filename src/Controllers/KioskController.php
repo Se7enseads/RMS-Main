@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
 use App\Repositories\TableRepository;
@@ -85,7 +86,7 @@ class KioskController
         $result = $this->orderService->placeOrder($userId, $type, $tableId, $items);
 
         if ($result['success']) {
-            header('Location: /kiosk');
+            Redirect::to('/kiosk');
             return;
         }
 

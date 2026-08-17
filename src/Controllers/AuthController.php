@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
 use App\Services\AuthService;
@@ -18,7 +19,7 @@ class AuthController
     public function loginForm(): void
     {
         if ($this->authService->isAuthenticated()) {
-            header('Location: ' . $this->homePath());
+            Redirect::to($this->homePath());
             return;
         }
 
@@ -59,7 +60,7 @@ class AuthController
         }
 
         if ($result['success']) {
-            header('Location: ' . $this->homePath($result['user']->roleName));
+            Redirect::to($this->homePath($result['user']->roleName));
             return;
         }
 
@@ -72,7 +73,7 @@ class AuthController
     public function logout(): void
     {
         $this->authService->logout();
-        header('Location: /login');
+        Redirect::to('/login');
     }
 
     private function homePath(?string $roleName = null): string

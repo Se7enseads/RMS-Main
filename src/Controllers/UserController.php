@@ -2,9 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Core\Redirect;
+use App\Core\View;
 use App\Services\RoleService;
 use App\Services\UserService;
-use App\Core\View;
 
 /**
  * Fetch all users from the database, including their roles.
@@ -39,7 +40,7 @@ class UserController
         $result = $this->userService->createUser($data);
 
         if ($result['success']) {
-            header('Location: /users');
+            Redirect::to('/users');
             return;
         }
 
@@ -75,7 +76,7 @@ class UserController
         $result = $this->userService->updateUser($id, $data);
 
         if ($result['success']) {
-            header('Location: /users');
+            Redirect::to('/users');
             return;
         }
 
@@ -93,6 +94,6 @@ class UserController
     public function deactivate(int $id): void
     {
         $this->userService->deactivateUser($id);
-        header('Location: /users');
+        Redirect::to('/users');
     }
 }

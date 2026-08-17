@@ -2,8 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Services\RoleService;
+use App\Core\Redirect;
 use App\Core\View;
+use App\Services\RoleService;
 
 class RoleController
 {
@@ -31,7 +32,7 @@ class RoleController
         $result = $this->roleService->createRole($name);
 
         if ($result['success']) {
-            header('Location: /roles');
+            Redirect::to('/roles');
             return;
         }
 

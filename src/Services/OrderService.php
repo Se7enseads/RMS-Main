@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Order;
 use App\Repositories\MenuRepository;
 use App\Repositories\OrderRepository;
+use Throwable;
 
 class OrderService
 {
@@ -18,7 +18,7 @@ class OrderService
     }
 
     /**
-     * @return array<string,mixed>
+     * @return array<string, mixed>
      */
     public function getDashboardData(?string $date = null): array
     {
@@ -33,7 +33,8 @@ class OrderService
 
     /**
      * @param array<int, array{menu_item_id: int, quantity: int}> $items
-     * @return array<string,mixed>
+     * @return array<string, mixed>
+     * @throws Throwable
      */
     public function placeOrder(int $userId, string $type, int $tableId, array $items): array
     {
@@ -45,8 +46,8 @@ class OrderService
         $total = 0.0;
 
         foreach ($items as $item) {
-            $menuItem = $this->menuRepository->findItemById((int) $item['menu_item_id']);
-            $quantity = max(1, (int) $item['quantity']);
+            $menuItem = $this->menuRepository->findItemById((int)$item['menu_item_id']);
+            $quantity = max(1, (int)$item['quantity']);
 
             if (!$menuItem) {
                 return ['success' => false, 'error' => 'Invalid menu item selected.'];
