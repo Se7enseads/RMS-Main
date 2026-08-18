@@ -8,9 +8,12 @@ $navGroups = [
         ['href' => '/admin', 'label' => 'Dashboard'],
         ['href' => '/admin/items', 'label' => 'Menu Items'],
         ['href' => '/admin/categories', 'label' => 'Categories'],
-        ['href' => '/store', 'label' => 'Store'],
         ['href' => '/admin/users', 'label' => 'Users'],
         ['href' => '/admin/roles', 'label' => 'Roles'],
+    ],
+    'Store' => [
+        ['href' => '/store', 'label' => 'Dashboard'],
+        ['href' => '/store/inventory', 'label' => 'Inventory'],
     ],
 ];
 ?>

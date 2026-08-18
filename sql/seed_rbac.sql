@@ -27,7 +27,8 @@ INSERT IGNORE INTO permissions (name) VALUES
     ('inventory.view'),
     ('inventory.create'),
     ('inventory.update'),
-    ('inventory.deactivate');
+    ('inventory.deactivate'),
+    ('store.view');
 
 -- MANAGER role: grant everything
 INSERT IGNORE INTO role_permissions (role_id, permission_id)

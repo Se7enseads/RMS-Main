@@ -592,10 +592,14 @@ class KernelTest extends DatabaseTestCase
 
         $response = $this->handle('GET', '/store');
         $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Store Dashboard', $response->getContent());
+
+        $response = $this->handle('GET', '/store/inventory');
+        $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('Store Inventory', $response->getContent());
 
         // water: sold by the bottle, received in cases of 12
-        $response = $this->handle('POST', '/store/ingredients/create', [
+        $response = $this->handle('POST', '/store/inventory/create', [
             'csrf_token' => $this->csrfToken(),
             'name' => 'Water 500ml',
             'base_unit' => 'pcs',
@@ -604,17 +608,17 @@ class KernelTest extends DatabaseTestCase
             'reorder_level' => '24',
         ]);
         $this->assertSame(302, $response->getStatusCode());
-        $this->assertSame('/store', $response->headers->get('Location'));
+        $this->assertSame('/store/inventory', $response->headers->get('Location'));
 
         // 2 cases @ 600 KES per case -> 24 bottles, 50 KES per bottle
-        $response = $this->handle('POST', '/store/ingredients/1/stock', [
+        $response = $this->handle('POST', '/store/inventory/stock/1', [
             'csrf_token' => $this->csrfToken(),
             'quantity' => '2',
             'unit' => 'case',
             'unit_cost' => '600',
         ]);
         $this->assertSame(302, $response->getStatusCode());
-        $this->assertSame('/store', $response->headers->get('Location'));
+        $this->assertSame('/store/inventory', $response->headers->get('Location'));
 
         $row = Database::getConnection()
             ->query("SELECT stock, cost_per_unit FROM inventory WHERE id = 1")
@@ -623,7 +627,7 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame(50.0, (float) $row['cost_per_unit']);
 
         // 1 more case @ 720 -> weighted average (24*50 + 12*60) / 36 = 53.3333
-        $this->handle('POST', '/store/ingredients/1/stock', [
+        $this->handle('POST', '/store/inventory/stock/1', [
             'csrf_token' => $this->csrfToken(),
             'quantity' => '1',
             'unit' => 'case',
@@ -642,7 +646,7 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame(2, $count);
 
         // stock page shows current state
-        $response = $this->handle('GET', '/store/ingredients/1/stock');
+        $response = $this->handle('GET', '/store/inventory/stock/1');
         $this->assertStringContainsString('Water 500ml', $response->getContent());
         $this->assertStringContainsString('36.000', $response->getContent());
     }
@@ -651,7 +655,7 @@ class KernelTest extends DatabaseTestCase
     {
         $this->loginAs('MANAGER');
 
-        $this->handle('POST', '/store/ingredients/create', [
+        $this->handle('POST', '/store/inventory/create', [
             'csrf_token' => $this->csrfToken(),
             'name' => 'Tomatoes',
             'base_unit' => 'pcs',
@@ -659,7 +663,7 @@ class KernelTest extends DatabaseTestCase
             'units_per_container' => '24',
         ]);
 
-        $response = $this->handle('POST', '/store/ingredients/1/stock', [
+        $response = $this->handle('POST', '/store/inventory/stock/1', [
             'csrf_token' => $this->csrfToken(),
             'quantity' => '1',
             'unit' => 'pcs',
@@ -674,13 +678,13 @@ class KernelTest extends DatabaseTestCase
         $this->loginAs('MANAGER');
 
         // beef: 1 kg received in grams
-        $this->handle('POST', '/store/ingredients/create', [
+        $this->handle('POST', '/store/inventory/create', [
             'csrf_token' => $this->csrfToken(),
             'name' => 'Beef Mince',
             'base_unit' => 'g',
             'receive_unit' => 'g',
         ]);
-        $this->handle('POST', '/store/ingredients/1/stock', [
+        $this->handle('POST', '/store/inventory/stock/1', [
             'csrf_token' => $this->csrfToken(),
             'quantity' => '5000',
             'unit' => 'g',

@@ -17,7 +17,7 @@
 </div>
 <?php endif ?>
 
-<form action="/store/ingredients/<?= $ingredient->id ?>/stock" method="POST">
+<form action="/store/inventory/stock/<?= $ingredient->id ?>" method="POST">
   <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
 
   <label>Quantity

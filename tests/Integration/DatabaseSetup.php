@@ -101,7 +101,7 @@ class DatabaseSetup
             'roles.update', 'roles.deactivate', 'menu.view', 'menu.create',
             'menu.update', 'menu.deactivate', 'categories.view', 'categories.create',
             'categories.update', 'categories.deactivate', 'inventory.view', 'inventory.create',
-            'inventory.update', 'inventory.deactivate',
+            'inventory.update', 'inventory.deactivate', 'store.view',
         ];
         $permStmt = $pdo->prepare('INSERT INTO permissions (name) VALUES (?)');
         $permissionIds = [];

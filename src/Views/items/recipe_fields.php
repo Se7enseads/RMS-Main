@@ -2,7 +2,7 @@
 <p class="muted">Check the ingredients this item is made from and enter the quantity per serving. Cost is calculated from current ingredient costs.</p>
 
 <?php if (empty($ingredients)) : ?>
-  <p class="muted">No ingredients yet. <a href="/store/ingredients/create">Create ingredients in the Store</a> first.</p>
+  <p class="muted">No ingredients yet. <a href="/store/inventory/create">Create ingredients in the Store</a> first.</p>
 <?php else : ?>
   <?php
     $recipeTotal = 0.0;

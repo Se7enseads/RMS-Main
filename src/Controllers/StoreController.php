@@ -19,7 +19,21 @@ class StoreController
     public function index(): void
     {
         $ingredients = $this->ingredientService->getAllIngredients();
-        View::render('store/index', ['ingredients' => $ingredients]);
+        $active = array_filter($ingredients, fn ($i) => $i->active);
+        $low = array_filter($active, fn ($i) => $i->isLowStock());
+        $value = array_sum(array_map(fn ($i) => $i->stock * $i->costPerUnit, $active));
+
+        View::render('store/index', [
+            'totalIngredients' => count($active),
+            'lowStockCount' => count($low),
+            'inventoryValue' => $value,
+        ]);
+    }
+
+    public function inventory(): void
+    {
+        $ingredients = $this->ingredientService->getAllIngredients();
+        View::render('store/inventory', ['ingredients' => $ingredients]);
     }
 
     public function create(): void
@@ -33,7 +47,7 @@ class StoreController
         $result = $this->ingredientService->createIngredient($data);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
@@ -61,7 +75,7 @@ class StoreController
         $result = $this->ingredientService->updateIngredient($id, $data);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
@@ -79,7 +93,7 @@ class StoreController
         if ($ingredient) {
             $this->ingredientService->setIngredientActive($id, !$ingredient->active);
         }
-        Redirect::to('/store');
+        Redirect::to('/store/inventory');
     }
 
     public function stockForm(int $id): void
@@ -107,7 +121,7 @@ class StoreController
         $result = $this->ingredientService->addStock($id, $_POST, $userId);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
