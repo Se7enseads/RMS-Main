@@ -112,23 +112,16 @@ class MenuItemController
         Redirect::to('/admin/items');
     }
 
-    /**
-     * Extract recipe rows from POST: ingredient_id[] checkboxes and a
-     * quantity[<ingredient_id>] map. Only rows with a positive quantity count.
-     *
-     * @param array<string,mixed> $data
-     * @return array<int, array{ingredient_id: int, quantity: float}>
-     */
     private function parseRecipeRows(array $data): array
     {
         $rows = [];
         $quantities = $data['quantity'] ?? [];
 
-        foreach ((array) ($data['ingredient_id'] ?? []) as $ingredientId) {
-            $quantity = (float) ($quantities[$ingredientId] ?? 0);
+        foreach ((array)($data['ingredient_id'] ?? []) as $ingredientId) {
+            $quantity = (float)($quantities[$ingredientId] ?? 0);
             if ($quantity > 0) {
                 $rows[] = [
-                    'ingredient_id' => (int) $ingredientId,
+                    'ingredient_id' => (int)$ingredientId,
                     'quantity' => $quantity,
                 ];
             }

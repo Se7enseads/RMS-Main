@@ -3,7 +3,6 @@
 namespace Tests\Integration;
 
 use App\Core\Database;
-use App\Models\OrderItem;
 use App\Services\BarService;
 use App\Services\KitchenService;
 use PDO;
@@ -25,7 +24,7 @@ class StationSplitTest extends DatabaseTestCase
              VALUES (?, ?, ?, 1, 1, 550.00)'
         );
         $stmt->execute([uniqid('ORD-'), 'PLACED', 'DINE_IN']);
-        $orderId = (int) $this->db->lastInsertId();
+        $orderId = (int)$this->db->lastInsertId();
 
         $itemStmt = $this->db->prepare(
             'INSERT INTO order_items (order_id, menu_item_id, price_at_time, quantity) VALUES (?, ?, ?, 1)'
@@ -41,8 +40,8 @@ class StationSplitTest extends DatabaseTestCase
     {
         $orderId = $this->insertMixedOrder();
 
-        $kitchen = (new KitchenService())->getKitchenData();
-        $bar = (new BarService())->getKitchenData();
+        $kitchen = new KitchenService()->getKitchenData();
+        $bar = new BarService()->getKitchenData();
 
         $this->assertCount(1, $kitchen['waiting']);
         $this->assertSame($orderId, $kitchen['waiting'][0]->id);
@@ -64,23 +63,23 @@ class StationSplitTest extends DatabaseTestCase
     {
         $orderId = $this->insertMixedOrder();
 
-        $kitchenResult = (new KitchenService())->markServed($orderId);
+        $kitchenResult = new KitchenService()->markServed($orderId);
         $this->assertTrue($kitchenResult['success']);
 
         // kitchen items served, order still PLACED because soda is pending at the bar
         $served = $this->db->query(
             "SELECT COUNT(*) FROM order_items WHERE order_id = $orderId AND served = 1"
         )->fetchColumn();
-        $this->assertSame(2, (int) $served);
+        $this->assertSame(2, (int)$served);
         $this->assertSame('PLACED', $this->db->query("SELECT status FROM orders WHERE id = $orderId")->fetchColumn());
 
         // order no longer in the kitchen display but still on the bar display
-        $kitchen = (new KitchenService())->getKitchenData();
-        $bar = (new BarService())->getKitchenData();
+        $kitchen = new KitchenService()->getKitchenData();
+        $bar = new BarService()->getKitchenData();
         $this->assertSame([], $kitchen['waiting']);
         $this->assertCount(1, $bar['waiting']);
 
-        $barResult = (new BarService())->markServed($orderId);
+        $barResult = new BarService()->markServed($orderId);
         $this->assertTrue($barResult['success']);
         $this->assertSame('SERVED', $this->db->query("SELECT status FROM orders WHERE id = $orderId")->fetchColumn());
     }
@@ -89,10 +88,10 @@ class StationSplitTest extends DatabaseTestCase
     {
         $orderId = $this->insertMixedOrder();
 
-        (new KitchenService())->markServed($orderId);
-        (new BarService())->markServed($orderId);
+        new KitchenService()->markServed($orderId);
+        new BarService()->markServed($orderId);
 
-        $data = (new KitchenService())->getKitchenData();
+        $data = new KitchenService()->getKitchenData();
 
         $this->assertCount(1, $data['served']);
         $this->assertSame($orderId, $data['served'][0]->id);
@@ -104,7 +103,7 @@ class StationSplitTest extends DatabaseTestCase
         $orderId = $this->insertMixedOrder();
         $this->db->exec("UPDATE orders SET status = 'SERVED' WHERE id = $orderId");
 
-        $result = (new BarService())->markServed($orderId);
+        $result = new BarService()->markServed($orderId);
 
         $this->assertFalse($result['success']);
     }

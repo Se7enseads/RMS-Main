@@ -12,7 +12,7 @@ use App\Services\OrderService;
 
 class BarController
 {
-    private const STATION = 'BAR';
+    private const string STATION = 'BAR';
 
     private BarService $barService;
     private MenuService $menuService;

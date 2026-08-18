@@ -14,6 +14,8 @@ $navGroups = [
     'Store' => [
         ['href' => '/store', 'label' => 'Dashboard'],
         ['href' => '/store/inventory', 'label' => 'Inventory'],
+        ['href' => '/store/stocktake', 'label' => 'Stock Take'],
+        ['href' => '/store/variance', 'label' => 'Variance'],
     ],
 ];
 ?>

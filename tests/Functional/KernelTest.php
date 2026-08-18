@@ -801,4 +801,230 @@ class KernelTest extends DatabaseTestCase
         $this->assertStringContainsString('value="' . $dashboardId . '" checked', $response->getContent());
 $this->assertStringContainsString('Permissions', $response->getContent());
     }
+
+    public function testManagerCanCreateIngredientWithInitialStockAndCost(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Whisky',
+            'base_unit' => 'ml',
+            'receive_unit' => 'case',
+            'units_per_container' => '750',
+            'quantity' => '3',
+            'unit_cost' => '4000',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/store/inventory', $response->headers->get('Location'));
+
+        $db = Database::getConnection();
+        $row = $db->query("SELECT id, stock, cost_per_unit FROM inventory WHERE name = 'Whisky'")->fetch();
+        $this->assertSame(2250.0, (float) $row['stock']);
+        $this->assertSame(5.3333, (float) $row['cost_per_unit']);
+
+        $movement = $db->query("SELECT * FROM inventory_movements WHERE inventory_id = " . (int) $row['id'])->fetch();
+        $this->assertSame('IN', $movement['movement_type']);
+        $this->assertSame(3.0, (float) $movement['quantity']);
+        $this->assertSame('case', $movement['unit']);
+        $this->assertSame(4000.0, (float) $movement['unit_cost']);
+        $this->assertSame(1, (int) $movement['performed_by']);
+    }
+
+    public function testCannotCreateIngredientWithQuantityWithoutCost(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Whisky',
+            'base_unit' => 'ml',
+            'receive_unit' => 'case',
+            'units_per_container' => '750',
+            'quantity' => '3',
+        ]);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Unit cost is required when entering an initial quantity', $response->getContent());
+
+        $db = Database::getConnection();
+        $this->assertFalse($db->query("SELECT id FROM inventory WHERE name = 'Whisky'")->fetch());
+    }
+
+    public function testManagerCanPerformStockTakeAndSeeVariance(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Vodka',
+            'base_unit' => 'ml',
+            'receive_unit' => 'case',
+            'units_per_container' => '1000',
+        ]);
+        $this->handle('POST', '/store/inventory/stock/1', [
+            'csrf_token' => $this->csrfToken(),
+            'quantity' => '2',
+            'unit' => 'case',
+            'unit_cost' => '1200',
+        ]);
+
+        $db = Database::getConnection();
+        $this->assertSame(2000.0, (float) $db->query('SELECT stock FROM inventory WHERE id = 1')->fetchColumn());
+
+        $response = $this->handle('POST', '/store/stocktake', [
+            'csrf_token' => $this->csrfToken(),
+            'scope' => 'ALL',
+            'take_date' => '2026-08-18',
+            'count' => ['1' => '1.5'],
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/store/variance', $response->headers->get('Location'));
+
+        $this->assertSame(1500.0, (float) $db->query('SELECT stock FROM inventory WHERE id = 1')->fetchColumn());
+
+        $take = $db->query('SELECT * FROM stock_takes')->fetch();
+        $this->assertNotFalse($take);
+        $this->assertSame('ALL', $take['scope']);
+        $this->assertSame('2026-08-18', $take['take_date']);
+        $this->assertSame(1, (int) $take['performed_by']);
+
+        $item = $db->query('SELECT * FROM stock_take_items')->fetch();
+        $this->assertSame(2000.0, (float) $item['system_qty']);
+        $this->assertSame(1500.0, (float) $item['counted_qty']);
+        $this->assertSame(-500.0, (float) $item['variance_qty']);
+        $this->assertSame(1.2, (float) $item['unit_cost']);
+        $this->assertSame(-600.0, (float) $item['variance_value']);
+
+        $movement = $db->query("SELECT * FROM inventory_movements WHERE reference_type = 'STOCK_TAKE'")->fetch();
+        $this->assertSame(-500.0, (float) $movement['quantity']);
+        $this->assertSame('ml', $movement['unit']);
+        $this->assertSame(1, (int) $movement['performed_by']);
+
+        $response = $this->handle('GET', '/store/variance');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Vodka', $response->getContent());
+        $this->assertStringContainsString('-500.000 ml', $response->getContent());
+        $this->assertStringContainsString('KES -600.00', $response->getContent());
+    }
+
+    public function testStockTakeSkipsBlankCountsAndDefaultsDate(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Vodka',
+            'base_unit' => 'ml',
+            'receive_unit' => 'case',
+            'units_per_container' => '1000',
+        ]);
+        $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Beef Mince',
+            'base_unit' => 'g',
+            'receive_unit' => 'g',
+        ]);
+
+        $this->handle('POST', '/store/stocktake', [
+            'csrf_token' => $this->csrfToken(),
+            'scope' => 'ALL',
+            'count' => ['1' => '1.5', '2' => ''],
+        ]);
+
+        $db = Database::getConnection();
+        $this->assertSame(1, (int) $db->query('SELECT COUNT(*) FROM stock_take_items')->fetchColumn());
+        $this->assertSame(
+            date('Y-m-d'),
+            $db->query('SELECT take_date FROM stock_takes')->fetchColumn()
+        );
+
+        $response = $this->handle('POST', '/store/stocktake', [
+            'csrf_token' => $this->csrfToken(),
+            'scope' => 'ALL',
+            'count' => ['1' => '', '2' => ''],
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/store/stocktake', $response->headers->get('Location'));
+        $this->assertSame(1, (int) $db->query('SELECT COUNT(*) FROM stock_takes')->fetchColumn());
+    }
+
+    public function testBarStockTakeOnlyListsBarIngredients(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Vodka',
+            'base_unit' => 'ml',
+            'receive_unit' => 'case',
+            'units_per_container' => '1000',
+        ]);
+        $this->handle('POST', '/store/inventory/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Beef Mince',
+            'base_unit' => 'g',
+            'receive_unit' => 'g',
+        ]);
+
+        // link Vodka to a BAR menu item, Beef to a KITCHEN item
+        $this->handle('POST', '/admin/items/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Vodka Shot',
+            'description' => 'Bar drink',
+            'price' => '150.00',
+            'category_id' => '2',
+            'ingredient_id' => ['1'],
+            'quantity' => ['1' => '50'],
+        ]);
+        $this->handle('POST', '/admin/items/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Beef Burger',
+            'description' => 'Kitchen dish',
+            'price' => '580.00',
+            'category_id' => '1',
+            'ingredient_id' => ['2'],
+            'quantity' => ['2' => '100'],
+        ]);
+
+        $response = $this->handle('GET', '/store/stocktake/bar');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Vodka', $response->getContent());
+        $this->assertStringNotContainsString('Beef Mince', $response->getContent());
+
+        $response = $this->handle('GET', '/store/stocktake');
+        $this->assertStringContainsString('Vodka', $response->getContent());
+        $this->assertStringContainsString('Beef Mince', $response->getContent());
+
+        $this->handle('POST', '/store/stocktake', [
+            'csrf_token' => $this->csrfToken(),
+            'scope' => 'BAR',
+            'take_date' => '2026-08-18',
+            'count' => ['1' => '1.0'],
+        ]);
+
+        $db = Database::getConnection();
+        $this->assertSame('BAR', $db->query('SELECT scope FROM stock_takes')->fetchColumn());
+
+        $response = $this->handle('GET', '/store/variance/bar');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Vodka', $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromStockTakeAndVariance(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/store/stocktake');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/store/variance');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('POST', '/store/stocktake', [
+            'csrf_token' => $this->csrfToken(),
+            'scope' => 'ALL',
+            'count' => ['1' => '1'],
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
+    }
 }

@@ -25,10 +25,10 @@ class KitchenServiceIntegrationTest extends DatabaseTestCase
              VALUES (?, ?, ?, 1, 1, 100.00)'
         );
         $stmt->execute([uniqid('ORD-'), $status, 'DINE_IN']);
-        return (int) $this->db->lastInsertId();
+        return (int)$this->db->lastInsertId();
     }
 
-    public function testMarkServedAgainstRealDatabase(): void
+    public function testMarkServed(): void
     {
         $orderId = $this->insertOrder('PLACED');
 
@@ -39,7 +39,7 @@ class KitchenServiceIntegrationTest extends DatabaseTestCase
         $this->assertSame('SERVED', $status);
     }
 
-    public function testMarkServedRejectsAlreadyServedAgainstRealDatabase(): void
+    public function testMarkServedRejectsAlreadyServed(): void
     {
         $orderId = $this->insertOrder('SERVED');
 

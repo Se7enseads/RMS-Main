@@ -40,9 +40,10 @@ class IngredientService
      * @param array<string,mixed> $data
      * @return array<string,mixed>
      */
-    public function createIngredient(array $data): array
+    public function createIngredient(array $data, int $performedBy = 0): array
     {
         $errors = $this->validateIngredientData($data);
+        $errors = array_merge($errors, $this->validateInitialStock($data));
 
         if ($errors) {
             return ['success' => false, 'errors' => $errors];
@@ -53,7 +54,60 @@ class IngredientService
         }
 
         $ingredient = $this->ingredientRepository->insert($data);
+
+        $quantity = $data['quantity'] ?? null;
+        if ($ingredient && $quantity !== '' && $quantity !== null) {
+            $stockResult = $this->addStock($ingredient->id, [
+                'quantity' => $quantity,
+                'unit' => $ingredient->receiveUnit,
+                'unit_cost' => $data['unit_cost'] ?? null,
+            ], $performedBy);
+
+            if (!$stockResult['success']) {
+                return ['success' => false, 'errors' => $stockResult['errors']];
+            }
+        }
+
         return ['success' => true, 'ingredient' => $ingredient];
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,string>
+     */
+    private function validateInitialStock(array $data): array
+    {
+        $errors = [];
+
+        $quantity = $data['quantity'] ?? null;
+        $unitCost = $data['unit_cost'] ?? null;
+        $hasQuantity = $quantity !== '' && $quantity !== null;
+        $hasCost = $unitCost !== '' && $unitCost !== null;
+
+        if (!$hasQuantity && !$hasCost) {
+            return $errors;
+        }
+
+        if ($hasQuantity && !is_numeric($quantity)) {
+            $errors['quantity'] = 'Quantity must be a number.';
+        } elseif ($hasQuantity && (float) $quantity <= 0) {
+            $errors['quantity'] = 'Quantity must be a positive number.';
+        }
+
+        if ($hasCost && !is_numeric($unitCost)) {
+            $errors['unit_cost'] = 'Unit cost must be a number.';
+        } elseif ($hasCost && (float) $unitCost < 0) {
+            $errors['unit_cost'] = 'Unit cost must be zero or a positive number.';
+        }
+
+        if ($hasQuantity && !$hasCost) {
+            $errors['unit_cost'] = 'Unit cost is required when entering an initial quantity.';
+        }
+        if ($hasCost && !$hasQuantity) {
+            $errors['quantity'] = 'Initial quantity is required when entering a unit cost.';
+        }
+
+        return $errors;
     }
 
     /**

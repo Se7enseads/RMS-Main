@@ -13,15 +13,15 @@ abstract class BrowserTestCase extends PlaywrightTestCase
     }
 
     /**
-     * E2E runs against the LIVE app database (bootstrap.php points
-     * Database at rms_test, but the dev server writes to rms).
+     * E2E runs against the rms_test database (same DB the other suites
+     * use, and what the dev server must point at via RMS_DB_NAME=rms_test).
      */
     protected function liveDb(): PDO
     {
         return new PDO(
             'mysql:host=' . (getenv('RMS_E2E_DB_HOST') ?: '127.0.0.1')
             . ';port=' . (getenv('RMS_E2E_DB_PORT') ?: '3306')
-            . ';dbname=' . (getenv('RMS_E2E_DB_NAME') ?: 'rms') . ';charset=utf8mb4',
+            . ';dbname=' . (getenv('RMS_E2E_DB_NAME') ?: 'rms_test') . ';charset=utf8mb4',
             getenv('RMS_E2E_DB_USER') ?: 'user',
             getenv('RMS_E2E_DB_PASS') ?: 'password',
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],

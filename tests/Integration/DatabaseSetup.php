@@ -50,6 +50,8 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE menu_item_ingredients');
         $pdo->exec('TRUNCATE TABLE inventory_movements');
         $pdo->exec('TRUNCATE TABLE inventory');
+        $pdo->exec('TRUNCATE TABLE stock_take_items');
+        $pdo->exec('TRUNCATE TABLE stock_takes');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -73,6 +75,8 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE menu_item_ingredients');
         $pdo->exec('TRUNCATE TABLE inventory_movements');
         $pdo->exec('TRUNCATE TABLE inventory');
+        $pdo->exec('TRUNCATE TABLE stock_take_items');
+        $pdo->exec('TRUNCATE TABLE stock_takes');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -101,7 +105,8 @@ class DatabaseSetup
             'roles.update', 'roles.deactivate', 'menu.view', 'menu.create',
             'menu.update', 'menu.deactivate', 'categories.view', 'categories.create',
             'categories.update', 'categories.deactivate', 'inventory.view', 'inventory.create',
-            'inventory.update', 'inventory.deactivate', 'store.view',
+            'inventory.update', 'inventory.deactivate',
+            'inventory.stocktake', 'inventory.variance', 'store.view',
         ];
         $permStmt = $pdo->prepare('INSERT INTO permissions (name) VALUES (?)');
         $permissionIds = [];

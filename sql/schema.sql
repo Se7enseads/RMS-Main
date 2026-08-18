@@ -83,11 +83,45 @@ CREATE TABLE IF NOT EXISTS inventory_movements
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (inventory_id) REFERENCES inventory (id),
-    FOREIGN KEY (performed_by) REFERENCES staff (id),
+    FOREIGN KEY (performed_by) REFERENCES users (id),
 
     INDEX (created_at),
     INDEX (movement_type),
     INDEX (reference_type, reference_id) -- *
+);
+
+CREATE TABLE IF NOT EXISTS stock_takes
+(
+    id           INT PRIMARY KEY AUTO_INCREMENT,
+    scope        ENUM ('ALL', 'BAR') NOT NULL DEFAULT 'ALL',
+    take_date    DATE                NOT NULL,
+    performed_by INT                 NOT NULL,
+    notes        VARCHAR(255),
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (performed_by) REFERENCES users (id),
+
+    INDEX (take_date),
+    INDEX (scope)
+);
+
+CREATE TABLE IF NOT EXISTS stock_take_items
+(
+    id             INT PRIMARY KEY AUTO_INCREMENT,
+    stock_take_id  INT            NOT NULL,
+    inventory_id   INT            NOT NULL,
+    system_qty     DECIMAL(12, 3) NOT NULL,
+    counted_qty    DECIMAL(12, 3) NOT NULL,
+    variance_qty   DECIMAL(12, 3) NOT NULL,
+    unit_cost      DECIMAL(12, 4) NOT NULL DEFAULT 0,
+    variance_value DECIMAL(12, 2) NOT NULL DEFAULT 0,
+
+    UNIQUE (stock_take_id, inventory_id),
+
+    FOREIGN KEY (stock_take_id) REFERENCES stock_takes (id),
+    FOREIGN KEY (inventory_id) REFERENCES inventory (id),
+
+    INDEX (inventory_id)
 );
 
 -- Menu Module

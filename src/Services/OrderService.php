@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Repositories\MenuRepository;
 use App\Repositories\OrderRepository;
 use Throwable;
@@ -25,8 +26,8 @@ class OrderService
         $date = $date ?? date('Y-m-d');
 
         return [
-            'openOrders' => $this->orderRepository->findOpenOrders(),
-            'orders' => $this->orderRepository->findOrdersForDate($date),
+            'openOrders' => $this->enrich($this->orderRepository->findOpenOrders()),
+            'orders' => $this->enrich($this->orderRepository->findOrdersForDate($date)),
             'date' => $date,
         ];
     }
@@ -36,7 +37,34 @@ class OrderService
      */
     public function getOrdersByUserId(int $userId): array
     {
-        return $this->orderRepository->findOrdersByUserId($userId);
+        return $this->enrich($this->orderRepository->findOrdersByUserId($userId));
+    }
+
+    /**
+     * Attach item counts, payment status and method to a batch of orders
+     * with two grouped queries instead of per-row subqueries.
+     *
+     * @param array<int, Order> $orders
+     * @return array<int, Order>
+     */
+    private function enrich(array $orders): array
+    {
+        if (!$orders) {
+            return [];
+        }
+
+        $ids = array_map(fn(Order $order) => $order->id, $orders);
+        $counts = $this->orderRepository->countItemsByOrderIds($ids);
+        $payments = $this->orderRepository->paymentMethodsByOrderIds($ids);
+
+        return array_map(function (Order $order) use ($counts, $payments) {
+            $orderId = $order->id;
+            return $order->withSummary(
+                itemCount: $counts[$orderId] ?? 0,
+                isPaid: isset($payments[$orderId]),
+                paymentMethod: $payments[$orderId] ?? null,
+            );
+        }, $orders);
     }
 
     /**

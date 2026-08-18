@@ -28,6 +28,8 @@ INSERT IGNORE INTO permissions (name) VALUES
     ('inventory.create'),
     ('inventory.update'),
     ('inventory.deactivate'),
+    ('inventory.stocktake'),
+    ('inventory.variance'),
     ('store.view');
 
 -- MANAGER role: grant everything

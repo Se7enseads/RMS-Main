@@ -66,4 +66,35 @@ $storeRoutes->add('store_stock_save', new Route('/store/inventory/stock/{id}', [
     '_csrf' => true,
 ], methods: ['POST']));
 
+$storeRoutes->add('store_stocktake', new Route('/store/stocktake', [
+    '_controller' => [StoreController::class, 'stockTake'],
+    '_auth' => true,
+    '_permission' => 'inventory.stocktake',
+], methods: ['GET']));
+
+$storeRoutes->add('store_stocktake_bar', new Route('/store/stocktake/bar', [
+    '_controller' => [StoreController::class, 'stockTakeBar'],
+    '_auth' => true,
+    '_permission' => 'inventory.stocktake',
+], methods: ['GET']));
+
+$storeRoutes->add('store_stocktake_save', new Route('/store/stocktake', [
+    '_controller' => [StoreController::class, 'stockTakeSave'],
+    '_auth' => true,
+    '_permission' => 'inventory.stocktake',
+    '_csrf' => true,
+], methods: ['POST']));
+
+$storeRoutes->add('store_variance', new Route('/store/variance', [
+    '_controller' => [StoreController::class, 'variance'],
+    '_auth' => true,
+    '_permission' => 'inventory.variance',
+], methods: ['GET']));
+
+$storeRoutes->add('store_variance_bar', new Route('/store/variance/bar', [
+    '_controller' => [StoreController::class, 'varianceBar'],
+    '_auth' => true,
+    '_permission' => 'inventory.variance',
+], methods: ['GET']));
+
 return $storeRoutes;

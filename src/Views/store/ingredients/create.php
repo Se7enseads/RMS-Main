@@ -45,6 +45,21 @@
            placeholder="e.g. 1000 g">
   </label>
 
+<?php $receiveUnitLabel = $old['receive_unit'] ?? 'receive unit'; ?>
+<?php $receiveUnitPlural = ($old['receive_unit'] ?? '') === 'case' ? 'cases' : $receiveUnitLabel . 's'; ?>
+
+  <label>Initial Quantity (<?= htmlspecialchars($receiveUnitPlural) ?>)
+    <input type="number" name="quantity" step="0.01" min="0"
+           value="<?= htmlspecialchars($old['quantity'] ?? '') ?>"
+           placeholder="Optional - add opening stock">
+  </label>
+
+  <label>Unit Cost per <?= htmlspecialchars($receiveUnitLabel) ?> (KES)
+    <input type="number" name="unit_cost" step="0.01" min="0"
+           value="<?= htmlspecialchars($old['unit_cost'] ?? '') ?>"
+           placeholder="Optional - required with initial quantity">
+  </label>
+
   <button type="submit">Create</button>
 </form>
 

@@ -45,4 +45,24 @@ class Order
     {
         return $this->status === 'CANCELLED';
     }
+
+    public function withSummary(int $itemCount, bool $isPaid, ?string $paymentMethod = null): self
+    {
+        return new self(
+            id: $this->id,
+            orderNumber: $this->orderNumber,
+            status: $this->status,
+            type: $this->type,
+            userId: $this->userId,
+            tableId: $this->tableId,
+            totalAmount: $this->totalAmount,
+            closedAt: $this->closedAt,
+            createdAt: $this->createdAt,
+            tableNumber: $this->tableNumber,
+            userName: $this->userName,
+            isPaid: $isPaid,
+            paymentMethod: $paymentMethod,
+            itemCount: $itemCount,
+        );
+    }
 }
