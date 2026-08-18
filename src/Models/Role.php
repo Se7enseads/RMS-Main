@@ -7,6 +7,7 @@ class Role
     public function __construct(
         public readonly int $id,
         public readonly string $name,
+        public readonly bool $active = true,
         public readonly ?string $createdAt = null,
         public readonly ?string $updatedAt = null,
     ) {}
@@ -19,6 +20,7 @@ class Role
         return new self(
             id: (int) $row['id'],
             name: $row['name'],
+            active: (bool) ($row['active'] ?? true),
             createdAt: $row['created_at'] ?? null,
             updatedAt: $row['updated_at'] ?? null,
         );
@@ -31,6 +33,7 @@ class Role
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'active' => $this->active,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];

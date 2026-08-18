@@ -1,22 +1,5 @@
-@import url('/css/globals.css');
-
 @import url('dashboard.css');
 @import url('order.css');
-
-.kiosk-body {
-    display: flex;
-    min-height: 100vh;
-}
-
-.kiosk-main {
-    margin-left: 220px;
-    min-width: 0;
-}
-
-.kiosk-content {
-    max-width: none;
-    padding: 23px;
-}
 
 .kiosk-content h1 {
     margin-bottom: 19px;

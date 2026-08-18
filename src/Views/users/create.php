@@ -10,7 +10,7 @@
 </div>
 <?php endif ?>
 
-<form action="/users/create" method="POST">
+<form action="/admin/users/create" method="POST">
   <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
 
   <label>Employee Number
@@ -59,6 +59,6 @@
   <button type="submit">Create</button>
 </form>
 
-<a href="/users" class="button-outline" style="margin-top: 12px; display: inline-block;">
+<a href="/admin/users" class="button-outline" style="margin-top: 12px; display: inline-block;">
   ← Back to Users
 </a>

@@ -24,7 +24,13 @@ class View
             throw new RuntimeException("View file '$file' not found.");
         }
 
-        $layout = dirname($file) . '/layout.php';
+        $viewsDir = dirname(__DIR__, 2) . '/Views';
+        $dir = dirname($file);
+        $layout = $dir . '/layout.php';
+        while (!file_exists($layout) && str_starts_with($dir, $viewsDir)) {
+            $dir = dirname($dir);
+            $layout = $dir . '/layout.php';
+        }
         extract($data);
 
         if (file_exists($layout)) {

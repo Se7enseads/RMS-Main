@@ -52,7 +52,7 @@ class KernelTest extends DatabaseTestCase
 
     public function testAnonymousAdminRouteRedirectsToLogin(): void
     {
-        $response = $this->handle('GET', '/items');
+        $response = $this->handle('GET', '/admin/items');
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertSame('/login', $response->headers->get('Location'));
@@ -67,7 +67,7 @@ class KernelTest extends DatabaseTestCase
         ]);
 
         $this->assertSame(302, $response->getStatusCode());
-        $this->assertSame('/', $response->headers->get('Location'));
+        $this->assertSame('/admin', $response->headers->get('Location'));
         $this->assertSame('MANAGER', Session::get('role_name'));
     }
 
@@ -165,7 +165,7 @@ class KernelTest extends DatabaseTestCase
     {
         $this->loginAs('WAITER', 2);
 
-        $response = $this->handle('GET', '/items');
+        $response = $this->handle('GET', '/admin/items');
 
         $this->assertSame(403, $response->getStatusCode());
     }
@@ -174,7 +174,7 @@ class KernelTest extends DatabaseTestCase
     {
         $this->loginAs('HEAD CHEF', 3);
 
-        $response = $this->handle('GET', '/users');
+        $response = $this->handle('GET', '/admin/users');
 
         $this->assertSame(403, $response->getStatusCode());
     }
@@ -297,10 +297,124 @@ class KernelTest extends DatabaseTestCase
     {
         $this->loginAs('MANAGER');
 
-        $response = $this->handle('GET', '/');
+        $response = $this->handle('GET', '/admin');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('Dashboard', $response->getContent());
+    }
+
+    public function testManagerCanViewItemEditForm(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/admin/items/edit/1');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Edit Menu Item', $response->getContent());
+        $this->assertStringContainsString('Chicken Soup', $response->getContent());
+    }
+
+    public function testManagerCanUpdateMenuItem(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/admin/items/edit/1', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Chicken Soup Deluxe',
+            'description' => 'Updated',
+            'price' => '250.00',
+            'category_id' => '1',
+        ]);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/items', $response->headers->get('Location'));
+
+        $response = $this->handle('GET', '/admin/items');
+        $this->assertStringContainsString('Chicken Soup Deluxe', $response->getContent());
+    }
+
+    public function testManagerCanDeactivateMenuItem(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/admin/items/deactivate/1', [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/items', $response->headers->get('Location'));
+
+        // deactivated items are hidden from the active list
+        $response = $this->handle('GET', '/admin/items');
+        $this->assertStringNotContainsString('Chicken Soup', $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromItemManagement(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/admin/items/edit/1');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('POST', '/admin/items/deactivate/1', [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testManagerCanViewRoleEditForm(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/admin/roles/edit/2');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Edit Role', $response->getContent());
+        $this->assertStringContainsString('WAITER', $response->getContent());
+    }
+
+    public function testManagerCanUpdateRole(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/admin/roles/edit/2', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'FLOOR STAFF',
+        ]);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/roles', $response->headers->get('Location'));
+
+        $response = $this->handle('GET', '/admin/roles');
+        $this->assertStringContainsString('FLOOR STAFF', $response->getContent());
+    }
+
+    public function testManagerCanDeactivateRole(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/admin/roles/deactivate/2', [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/roles', $response->headers->get('Location'));
+
+        $response = $this->handle('GET', '/admin/roles');
+        $this->assertStringContainsString('Inactive', $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromRoleManagement(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/admin/roles/edit/1');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('POST', '/admin/roles/deactivate/1', [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(403, $response->getStatusCode());
     }
 
     public function testKitchenOrderFlowEndToEnd(): void
@@ -435,5 +549,252 @@ class KernelTest extends DatabaseTestCase
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function testManagerCanCreateCategory(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/admin/categories');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Category List', $response->getContent());
+
+        $response = $this->handle('POST', '/admin/categories/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Grills',
+            'station' => 'KITCHEN',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/categories', $response->headers->get('Location'));
+
+        $response = $this->handle('GET', '/admin/categories');
+        $this->assertStringContainsString('Grills', $response->getContent());
+    }
+
+    public function testManagerCanUpdateCategory(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/admin/categories/edit/1', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Main Courses',
+            'station' => 'KITCHEN',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/admin/categories/edit/1');
+        $this->assertStringContainsString('Main Courses', $response->getContent());
+    }
+
+    public function testManagerCanCreateIngredientAndAddStock(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/store');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Store Inventory', $response->getContent());
+
+        // water: sold by the bottle, received in cases of 12
+        $response = $this->handle('POST', '/store/ingredients/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Water 500ml',
+            'base_unit' => 'pcs',
+            'receive_unit' => 'case',
+            'units_per_container' => '12',
+            'reorder_level' => '24',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/store', $response->headers->get('Location'));
+
+        // 2 cases @ 600 KES per case -> 24 bottles, 50 KES per bottle
+        $response = $this->handle('POST', '/store/ingredients/1/stock', [
+            'csrf_token' => $this->csrfToken(),
+            'quantity' => '2',
+            'unit' => 'case',
+            'unit_cost' => '600',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/store', $response->headers->get('Location'));
+
+        $row = Database::getConnection()
+            ->query("SELECT stock, cost_per_unit FROM inventory WHERE id = 1")
+            ->fetch();
+        $this->assertSame(24.0, (float) $row['stock']);
+        $this->assertSame(50.0, (float) $row['cost_per_unit']);
+
+        // 1 more case @ 720 -> weighted average (24*50 + 12*60) / 36 = 53.3333
+        $this->handle('POST', '/store/ingredients/1/stock', [
+            'csrf_token' => $this->csrfToken(),
+            'quantity' => '1',
+            'unit' => 'case',
+            'unit_cost' => '720',
+        ]);
+        $row = Database::getConnection()
+            ->query("SELECT stock, cost_per_unit FROM inventory WHERE id = 1")
+            ->fetch();
+        $this->assertSame(36.0, (float) $row['stock']);
+        $this->assertEqualsWithDelta(53.3333, (float) $row['cost_per_unit'], 0.001);
+
+        // movements were recorded
+        $count = (int) Database::getConnection()
+            ->query("SELECT COUNT(*) FROM inventory_movements WHERE inventory_id = 1 AND movement_type = 'IN'")
+            ->fetchColumn();
+        $this->assertSame(2, $count);
+
+        // stock page shows current state
+        $response = $this->handle('GET', '/store/ingredients/1/stock');
+        $this->assertStringContainsString('Water 500ml', $response->getContent());
+        $this->assertStringContainsString('36.000', $response->getContent());
+    }
+
+    public function testAddStockRejectsWrongUnit(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $this->handle('POST', '/store/ingredients/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Tomatoes',
+            'base_unit' => 'pcs',
+            'receive_unit' => 'case',
+            'units_per_container' => '24',
+        ]);
+
+        $response = $this->handle('POST', '/store/ingredients/1/stock', [
+            'csrf_token' => $this->csrfToken(),
+            'quantity' => '1',
+            'unit' => 'pcs',
+            'unit_cost' => '10',
+        ]);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Stock must be received in case', $response->getContent());
+    }
+
+    public function testManagerCanCreateItemWithRecipeAndSeeVat(): void
+    {
+        $this->loginAs('MANAGER');
+
+        // beef: 1 kg received in grams
+        $this->handle('POST', '/store/ingredients/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Beef Mince',
+            'base_unit' => 'g',
+            'receive_unit' => 'g',
+        ]);
+        $this->handle('POST', '/store/ingredients/1/stock', [
+            'csrf_token' => $this->csrfToken(),
+            'quantity' => '5000',
+            'unit' => 'g',
+            'unit_cost' => '0.5',
+        ]);
+
+        $response = $this->handle('POST', '/admin/items/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'Burger',
+            'description' => 'Beef burger',
+            'price' => '580.00',
+            'category_id' => '1',
+            'ingredient_id' => ['1'],
+            'quantity' => ['1' => '100'],
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin/items', $response->headers->get('Location'));
+
+        $row = Database::getConnection()
+            ->query("SELECT menu_item_id, inventory_id, quantity, unit FROM menu_item_ingredients WHERE menu_item_id = (SELECT MAX(id) FROM menu_items)")
+            ->fetch();
+        $this->assertSame(1, (int) $row['inventory_id']);
+        $this->assertSame(100.0, (float) $row['quantity']);
+        $this->assertSame('g', $row['unit']);
+
+        // cost = 100g * 0.50 = 50.00; VAT = 580 - 580/1.16 = 80.00
+        $response = $this->handle('GET', '/admin/items/edit/' . (int) Database::getConnection()->query('SELECT MAX(id) FROM menu_items')->fetchColumn());
+        $this->assertStringContainsString('Beef Mince', $response->getContent());
+        $this->assertStringContainsString('Total ingredient cost per serving:', $response->getContent());
+        $this->assertStringContainsString('50.00', $response->getContent());
+        $this->assertStringContainsString('VAT (16%): KES 80.00', $response->getContent());
+        $this->assertStringContainsString('Net amount: KES 500.00', $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromStoreAndCategories(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/store');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/admin/categories');
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testManagerCanCreateRoleWithPermissions(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $db = Database::getConnection();
+        $kitchenId = (int) $db->query("SELECT id FROM permissions WHERE name = 'kitchen.view'")->fetchColumn();
+        $barId = (int) $db->query("SELECT id FROM permissions WHERE name = 'bar.view'")->fetchColumn();
+
+        $response = $this->handle('POST', '/admin/roles/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'HOST',
+            'permissions' => [$kitchenId, $barId],
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $roleId = (int) $db->query("SELECT id FROM roles WHERE name = 'HOST'")->fetchColumn();
+        $granted = $db->query("SELECT permission_id FROM role_permissions WHERE role_id = $roleId")->fetchAll();
+
+        $this->assertCount(2, $granted);
+        $this->assertSame([$kitchenId, $barId], array_map('intval', array_column($granted, 'permission_id')));
+    }
+
+    public function testManagerCanAddAndRemoveRolePermissions(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $db = Database::getConnection();
+        $kitchenId = (int) $db->query("SELECT id FROM permissions WHERE name = 'kitchen.view'")->fetchColumn();
+        $barId = (int) $db->query("SELECT id FROM permissions WHERE name = 'bar.view'")->fetchColumn();
+
+        $this->handle('POST', '/admin/roles/create', [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'HOST2',
+            'permissions' => [$kitchenId],
+        ]);
+        $roleId = (int) $db->query("SELECT id FROM roles WHERE name = 'HOST2'")->fetchColumn();
+
+        // add bar.view
+        $this->handle('POST', "/admin/roles/edit/$roleId", [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'HOST2',
+            'permissions' => [$kitchenId, $barId],
+        ]);
+        $count = (int) $db->query("SELECT COUNT(*) FROM role_permissions WHERE role_id = $roleId")->fetchColumn();
+        $this->assertSame(2, $count);
+
+        // remove kitchen.view again
+        $this->handle('POST', "/admin/roles/edit/$roleId", [
+            'csrf_token' => $this->csrfToken(),
+            'name' => 'HOST2',
+            'permissions' => [$barId],
+        ]);
+        $remaining = array_map('intval', array_column(
+            $db->query("SELECT permission_id FROM role_permissions WHERE role_id = $roleId")->fetchAll(),
+            'permission_id'
+        ));
+        $this->assertSame([$barId], $remaining);
+    }
+
+    public function testRoleEditFormShowsSelectedPermissions(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $db = Database::getConnection();
+        $dashboardId = (int) $db->query("SELECT id FROM permissions WHERE name = 'dashboard.view'")->fetchColumn();
+
+        $response = $this->handle('GET', '/admin/roles/edit/1');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('value="' . $dashboardId . '" checked', $response->getContent());
+$this->assertStringContainsString('Permissions', $response->getContent());
     }
 }

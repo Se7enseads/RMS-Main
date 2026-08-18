@@ -1,38 +1,50 @@
 <h1>User List</h1>
 
-<a href="/users/create" class="button button-primary">+ Create New User</a>
+<a href="/admin/users/create" class="button button-primary">+ Create New User</a>
 
-<table class="users-table">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Name</th>
-      <th>Role</th>
-      <th>Employee Num</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php
+<div id="users-table"></div>
 
-    if (!empty($users)) {
-        foreach ($users as $user) : ?>
-        <tr>
-          <td><?= $user->id ?></td>
-          <td><?= htmlspecialchars($user->getFullName()) ?></td>
-          <td><?= htmlspecialchars($user->roleName ?? 'Not assigned') ?></td>
-          <td><?= htmlspecialchars($user->employeeNum) ?></td>
-          <td>
-            <a href="/users/update/<?= $user->id ?>" class="button-outline">Edit</a>
-            <form action="/users/deactivate/<?= $user->id ?>" method="POST">
-              <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
-              <button type="submit" onclick="return confirm('Are you sure?')">Deactivate</button>
-            </form>
-          </td>
-        </tr>
-        <?php endforeach;
-    } else {
-        echo '<tr><td colspan="5">No users found.</td></tr>';
-    } ?>
-  </tbody>
-</table>
+<script>
+  const usersData = <?= json_encode(array_map(fn($u) => [
+      'id' => $u->id,
+      'name' => $u->getFullName(),
+      'role' => $u->roleName ?? 'Not assigned',
+      'employeeNum' => $u->employeeNum,
+      'status' => $u->active ? 'Active' : 'Inactive',
+  ], $users)) ?>;
+  const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
+
+  new Tabulator('#users-table', {
+    data: usersData,
+    layout: 'fitColumns',
+    pagination: true,
+    paginationMode: 'local',
+    paginationSize: 15,
+    paginationSizeSelector: [10, 15, 25, 50],
+    initialSort: [{ column: 'id', dir: 'desc' }],
+    columns: [
+      { title: 'ID', field: 'id', width: 70, headerFilter: true },
+      { title: 'Name', field: 'name', headerFilter: true },
+      { title: 'Role', field: 'role', headerFilter: true },
+      { title: 'Employee Num', field: 'employeeNum', headerFilter: true },
+      { title: 'Status', field: 'status', width: 100, headerFilter: true },
+      {
+        title: 'Actions',
+        field: 'id',
+        width: 200,
+        formatter: (cell) => {
+          const id = cell.getValue();
+          return '<a href="/admin/users/update/' + id + '" class="button-outline action-button">Edit</a> ' +
+            '<form action="/admin/users/deactivate/' + id + '" method="POST" class="inline-form">' +
+            '<input type="hidden" name="csrf_token" value="' + csrfToken + '">' +
+            '<button type="submit" class="button-danger action-button" onclick="return confirm(\'Are you sure?\')">Deactivate</button>' +
+            '</form>';
+        },
+      },
+    ],
+    rowClick: (e, row) => {
+      if (e.target.closest('a, form, button, input')) return;
+      window.location.href = '/admin/users/' + row.getData().id + '/activity';
+    },
+  });
+</script>

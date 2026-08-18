@@ -2,7 +2,6 @@
 
 use App\Core\Session;
 
-$currentPath = $_SERVER['REQUEST_URI'] ?? '/';
 $navItems = [
         ['href' => '/kiosk', 'label' => 'Dashboard'],
         ['href' => '/kiosk/order', 'label' => 'Place Order'],
@@ -18,6 +17,7 @@ $userName = Session::get('user_name') ?? '';
     <title>RMS - Kiosk</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/kiosk/main.css">
+    <script src="/js/main.js" defer></script>
 </head>
 <body class="kiosk-body">
 
@@ -28,7 +28,7 @@ $userName = Session::get('user_name') ?? '';
     <nav class="sidebar-nav">
         <?php foreach ($navItems as $item) : ?>
             <a href="<?= $item['href'] ?>"
-               class="sidebar-link <?= $currentPath === $item['href'] || str_starts_with($currentPath, $item['href'] . '/') ? 'active' : '' ?>">
+               class="sidebar-link">
                 <?= htmlspecialchars($item['label']) ?>
             </a>
         <?php endforeach ?>

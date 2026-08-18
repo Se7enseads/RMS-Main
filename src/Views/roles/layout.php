@@ -3,13 +3,15 @@
 use App\Core\Session;
 
 $userName = Session::get('user_name') ?? '';
-$currentPath = $_SERVER['REQUEST_URI'] ?? '/';
-$navItems = [
-        ['href' => '/', 'label' => 'Dashboard'],
-        ['href' => '/items', 'label' => 'Items'],
-        ['href' => '/users', 'label' => 'Users'],
-        ['href' => '/roles', 'label' => 'Roles'],
-        ['href' => '/kitchen', 'label' => 'Kitchen'],
+$navGroups = [
+    'Management' => [
+        ['href' => '/admin', 'label' => 'Dashboard'],
+        ['href' => '/admin/items', 'label' => 'Menu Items'],
+        ['href' => '/admin/categories', 'label' => 'Categories'],
+        ['href' => '/store', 'label' => 'Store'],
+        ['href' => '/admin/users', 'label' => 'Users'],
+        ['href' => '/admin/roles', 'label' => 'Roles'],
+    ],
 ];
 ?>
 
@@ -19,31 +21,42 @@ $navItems = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RMS</title>
+    <title>RMS - Roles</title>
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin/main.css">
+    <link rel="stylesheet" href="/vendor/tabulator/tabulator.min.css">
+    <script src="/vendor/tabulator/tabulator.min.js"></script>
+    <script src="/js/main.js" defer></script>
 </head>
 
-<body>
-<header>
-    <a href="/" class="logo">RMS</a>
-    <nav>
-        <?php foreach ($navItems as $item) : ?>
-            <a href="<?= $item['href'] ?>"
-               class="<?= $currentPath === $item['href'] || str_starts_with($currentPath, $item['href'] . '/') ? 'active' : '' ?>">
-                <?= $item['label'] ?>
-            </a>
+<body class="kiosk-body">
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <a href="/admin">RMS</a>
+    </div>
+    <nav class="sidebar-nav">
+        <?php foreach ($navGroups as $group => $items) : ?>
+            <div class="sidebar-group"><?= $group ?></div>
+            <?php foreach ($items as $item) : ?>
+                <a href="<?= $item['href'] ?>"
+                   class="sidebar-link">
+                    <?= $item['label'] ?>
+                </a>
+            <?php endforeach ?>
         <?php endforeach ?>
-        <?php if ($userName !== '') : ?>
-            <span class="header-user"><?= htmlspecialchars($userName) ?></span>
-        <?php endif ?>
-        <form method="POST" action="/logout" class="nav-logout">
-            <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
-            <button type="submit" class="nav-logout-btn">Logout</button>
-        </form>
     </nav>
-</header>
-<main><?= $slot ?></main>
+    <div class="sidebar-footer">
+        <div class="sidebar-user"><?= htmlspecialchars($userName) ?></div>
+        <form method="POST" action="/logout">
+            <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
+            <button type="submit" class="sidebar-link">Logout</button>
+        </form>
+    </div>
+</aside>
+
+<div class="kiosk-main">
+    <main class="kiosk-content"><?= $slot ?></main>
+</div>
 <footer>&copy; <?= date('Y') ?> Restaurant Management System</footer>
 </body>
 

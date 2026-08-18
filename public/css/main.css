@@ -66,6 +66,108 @@ main {
     padding: 32px 24px;
 }
 
+/* ── Sidebar layout chrome ── */
+.kiosk-body {
+    display: flex;
+    min-height: 100vh;
+}
+
+.kiosk-main {
+    margin-left: 220px;
+    min-width: 0;
+    flex: 1;
+}
+
+.kiosk-content {
+    max-width: none;
+    padding: 23px;
+}
+
+/* ── Top header (non-sidebar pages) ── */
+header nav a.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.header-user {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ── Nav logout form ── */
+.nav-logout {
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.nav-logout-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* ── Utility ── */
+.muted {
+    color: var(--text-muted);
+}
+
+.user-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.plain-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0 1rem;
+    background: var(--surface);
+}
+
+.plain-table th,
+.plain-table td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.plain-table .num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.checkbox-label input[type='checkbox'] {
+    width: auto;
+    margin-top: 0;
+}
+
 /* ── Footer ── */
 footer {
     text-align: center;
@@ -222,9 +324,97 @@ form select:focus {
     box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
 }
 
+form textarea {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-family: var(--font);
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.2s;
+    resize: vertical;
+}
+
+form textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.15);
+}
+
 form button[type='submit'] {
     margin-top: 8px;
     width: 100%;
+}
+
+form.wide-form {
+    max-width: 100%;
+}
+
+/* ── Inline action forms (table action cells) ── */
+form.inline-form {
+    display: inline;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    max-width: none;
+}
+
+form.inline-form button[type='submit'] {
+    width: auto;
+    margin: 0;
+}
+
+/* ── Table action buttons ── */
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.action-button:hover {
+    text-decoration: none;
+}
+
+.action-button.button-primary {
+    background: var(--primary);
+    color: var(--text-light);
+}
+
+.action-button.button-primary:hover {
+    background: var(--primary-light);
+}
+
+.action-button.button-outline {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--border);
+}
+
+.action-button.button-outline:hover {
+    border-color: var(--primary-light);
+    color: var(--primary-light);
+}
+
+.action-button.button-danger {
+    background: var(--danger);
+    color: var(--text-light);
+}
+
+.action-button.button-danger:hover {
+    background: var(--danger-light);
 }
 
 /* ── Error Block ── */
@@ -309,6 +499,15 @@ form button[type='submit'] {
     text-decoration: none;
 }
 
+.sidebar-group {
+    padding: 14px 24px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
 .sidebar-nav {
     flex: 1;
     padding: 16px 0;
@@ -368,7 +567,8 @@ form button[type='submit'] {
 }
 
 .sidebar-user {
-    padding: 6px 24px;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    padding: 0 24px 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
 }

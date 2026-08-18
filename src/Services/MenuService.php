@@ -72,6 +72,118 @@ class MenuService
 
     /**
      * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function updateItem(int $id, array $data): array
+    {
+        $errors = $this->validateItemData($data);
+
+        if ($errors) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $item = $this->menuRepository->updateItem($id, $data);
+        return ['success' => true, 'item' => $item];
+    }
+
+    public function setItemActive(int $id, bool $active): void
+    {
+        $this->menuRepository->setItemActive($id, $active);
+    }
+
+    public function getCategoryById(int $id): ?MenuCategory
+    {
+        return $this->menuRepository->findCategoryById($id);
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function createCategory(array $data): array
+    {
+        $errors = $this->validateCategoryData($data);
+
+        if ($errors) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $category = $this->menuRepository->insertCategory($data);
+        return ['success' => true, 'category' => $category];
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,mixed>
+     */
+    public function updateCategory(int $id, array $data): array
+    {
+        $errors = $this->validateCategoryData($data);
+
+        if ($errors) {
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $this->menuRepository->updateCategory($id, $data);
+        return ['success' => true, 'category' => $this->menuRepository->findCategoryById($id)];
+    }
+
+    public function setCategoryActive(int $id, bool $active): void
+    {
+        $this->menuRepository->setCategoryActive($id, $active);
+    }
+
+    /**
+     * @return array<int, array{ingredient_id: int, name: string, base_unit: string, quantity: float, unit: string, cost_per_unit: float}>
+     */
+    public function getRecipe(int $menuItemId): array
+    {
+        return $this->menuRepository->findRecipeByItemId($menuItemId);
+    }
+
+    /**
+     * @param array<int, array{ingredient_id: int, quantity: float}> $rows
+     */
+    public function setRecipe(int $menuItemId, array $rows): void
+    {
+        $this->menuRepository->setRecipe($menuItemId, $rows);
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    public function getRecipeCosts(): array
+    {
+        return $this->menuRepository->findRecipeCosts();
+    }
+
+    public function getRecipeCost(int $menuItemId): float
+    {
+        $costs = $this->menuRepository->findRecipeCosts();
+        return $costs[$menuItemId] ?? 0.0;
+    }
+
+    /**
+     * @param array<string,mixed> $data
+     * @return array<string,string>
+     */
+    private function validateCategoryData(array $data): array
+    {
+        $errors = [];
+
+        if (empty($data['name'])) {
+            $errors['name'] = 'Category name is required.';
+        }
+
+        if (!in_array($data['station'] ?? null, ['KITCHEN', 'BAR'], true)) {
+            $errors['station'] = 'Select a valid station.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @param array<string,mixed> $data
      * @return array<string,string>
      */
     private function validateItemData(array $data): array

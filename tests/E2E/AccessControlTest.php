@@ -6,7 +6,7 @@ class AccessControlTest extends BrowserTestCase
 {
     public function testAnonymousUserIsRedirectedFromAdminPages(): void
     {
-        $this->page->goto($this->baseUrl() . '/items');
+        $this->page->goto($this->baseUrl() . '/admin/items');
         $this->expect($this->page)->toHaveURL($this->baseUrl() . '/login');
     }
 
@@ -16,13 +16,13 @@ class AccessControlTest extends BrowserTestCase
         $this->page->goto($this->baseUrl() . '/kitchen');
 
         $this->expect($this->page->locator('h1'))->toContainText('403');
-        $this->expect($this->page)->not()->toHaveURL($this->baseUrl() . '/users');
+        $this->expect($this->page)->not()->toHaveURL($this->baseUrl() . '/admin/users');
     }
 
     public function testChefCannotAccessUsersPage(): void
     {
         $this->loginWithPin('5678');
-        $this->page->goto($this->baseUrl() . '/users');
+        $this->page->goto($this->baseUrl() . '/admin/users');
 
         $this->expect($this->page->locator('h1'))->toContainText('403');
     }
@@ -38,7 +38,7 @@ class AccessControlTest extends BrowserTestCase
     public function testManagerCanAccessUsersPage(): void
     {
         $this->loginWithPassword('MGR001', 'manager123');
-        $this->page->goto($this->baseUrl() . '/users');
+        $this->page->goto($this->baseUrl() . '/admin/users');
 
         $this->expect($this->page->locator('h1'))->toContainText('User List');
     }

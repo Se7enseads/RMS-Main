@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Redirect;
 use App\Core\View;
+use App\Services\OrderService;
 use App\Services\RoleService;
 use App\Services\UserService;
 
@@ -40,7 +41,7 @@ class UserController
         $result = $this->userService->createUser($data);
 
         if ($result['success']) {
-            Redirect::to('/users');
+            Redirect::to('/admin/users');
             return;
         }
 
@@ -76,7 +77,7 @@ class UserController
         $result = $this->userService->updateUser($id, $data);
 
         if ($result['success']) {
-            Redirect::to('/users');
+            Redirect::to('/admin/users');
             return;
         }
 
@@ -94,6 +95,24 @@ class UserController
     public function deactivate(int $id): void
     {
         $this->userService->deactivateUser($id);
-        Redirect::to('/users');
+        Redirect::to('/admin/users');
+    }
+
+    public function activity(int $id): void
+    {
+        $user = $this->userService->getUserById($id);
+        if (!$user) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        $orderService = new OrderService();
+        $orders = $orderService->getOrdersByUserId($id);
+
+        View::render('users/activity', [
+            'user' => $user,
+            'orders' => $orders,
+        ]);
     }
 }

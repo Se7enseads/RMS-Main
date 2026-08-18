@@ -5,12 +5,12 @@
 ## Feature List TODOs
 
 1. [ ] Add Admin close day button
-    - [ ] Role Creation should include a selection for available permissions
+    - [x] Role Creation should include a selection for available permissions
     - [ ] Variance display
         - [ ] After daily stock-take a variance is performed to
 2. [ ] Store display
-    - [ ] Insert the individual ingredients to the store
-    - [ ] Store admin page.
+    - [x] Insert the individual ingredients to the store
+    - [x] Store admin page.
         - [ ] Variance display
 2. [x] Add Kitchen Display
     - [x] food should be displayed here
@@ -42,9 +42,9 @@
     - [ ] Timeout frontend errors
     - [ ] delete and reset state, if session is wrong
 
-- [ ] Testing
-    - [ ] Unit tests
-    - [ ] HTTP tests
+- [x] Testing
+    - [x] Unit tests
+    - [x] HTTP tests
 
 ## CHECKLIST
 

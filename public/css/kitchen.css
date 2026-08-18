@@ -2,6 +2,19 @@
 
 .kitchen-body {
     background: var(--bg);
+    display: flex;
+    min-height: 100vh;
+}
+
+.kitchen-main {
+    margin-left: 220px;
+    min-width: 0;
+    flex: 1;
+}
+
+.kitchen-content {
+    max-width: none;
+    padding: 23px;
 }
 
 .kitchen-dashboard {

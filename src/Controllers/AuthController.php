@@ -84,7 +84,7 @@ class AuthController
             'WAITER' => '/kiosk',
             'HEAD CHEF' => '/kitchen',
             'BARTENDER' => '/bar',
-            default => '/',
+            default => '/admin',
         };
     }
 }

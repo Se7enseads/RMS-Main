@@ -47,6 +47,9 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE roles');
         $pdo->exec('TRUNCATE TABLE menu_items');
         $pdo->exec('TRUNCATE TABLE menu_categories');
+        $pdo->exec('TRUNCATE TABLE menu_item_ingredients');
+        $pdo->exec('TRUNCATE TABLE inventory_movements');
+        $pdo->exec('TRUNCATE TABLE inventory');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -67,6 +70,9 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE roles');
         $pdo->exec('TRUNCATE TABLE menu_items');
         $pdo->exec('TRUNCATE TABLE menu_categories');
+        $pdo->exec('TRUNCATE TABLE menu_item_ingredients');
+        $pdo->exec('TRUNCATE TABLE inventory_movements');
+        $pdo->exec('TRUNCATE TABLE inventory');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -92,7 +98,10 @@ class DatabaseSetup
         $permissions = [
             'dashboard.view', 'kitchen.view', 'bar.view', 'users.view', 'users.create',
             'users.update', 'users.deactivate', 'roles.view', 'roles.create',
-            'menu.view', 'menu.create',
+            'roles.update', 'roles.deactivate', 'menu.view', 'menu.create',
+            'menu.update', 'menu.deactivate', 'categories.view', 'categories.create',
+            'categories.update', 'categories.deactivate', 'inventory.view', 'inventory.create',
+            'inventory.update', 'inventory.deactivate',
         ];
         $permStmt = $pdo->prepare('INSERT INTO permissions (name) VALUES (?)');
         $permissionIds = [];

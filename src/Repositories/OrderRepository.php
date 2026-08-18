@@ -53,6 +53,28 @@ class OrderRepository
         return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
     }
 
+    /**
+     * @return array<int, Order>
+     */
+    public function findOrdersByUserId(int $userId): array
+    {
+        $sql = "
+            SELECT o.*, t.number AS table_number, u.first_name AS user_name,
+                   EXISTS(SELECT 1 FROM payments p WHERE p.order_id = o.id) AS is_paid,
+                   (SELECT p.method FROM payments p WHERE p.order_id = o.id LIMIT 1) AS payment_method,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.user_id = :user_id
+            ORDER BY o.created_at DESC
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId]);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
     public function countOpenOrders(): int
     {
         $stmt = $this->db->query("SELECT COUNT(*) FROM orders WHERE status = 'PLACED'");

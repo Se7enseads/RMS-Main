@@ -28,4 +28,16 @@ class MenuItem
             categoryName: $row['category_name'] ?? null,
         );
     }
+
+    public const VAT_RATE = 0.16;
+
+    public function netAmount(): float
+    {
+        return round($this->price / (1 + self::VAT_RATE), 2);
+    }
+
+    public function vatAmount(): float
+    {
+        return round($this->price - $this->netAmount(), 2);
+    }
 }

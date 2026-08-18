@@ -48,4 +48,18 @@ class RoleRepository
         $id = (int)$this->db->lastInsertId();
         return new Role(id: $id, name: $name);
     }
+
+    public function update(int $id, string $name): ?Role
+    {
+        $stmt = $this->db->prepare("UPDATE roles SET name = :name WHERE id = :id");
+        $stmt->execute(['name' => $name, 'id' => $id]);
+
+        return $this->findById($id);
+    }
+
+    public function setActive(int $id, bool $active): void
+    {
+        $stmt = $this->db->prepare("UPDATE roles SET active = :active WHERE id = :id");
+        $stmt->execute(['active' => $active ? 1 : 0, 'id' => $id]);
+    }
 }

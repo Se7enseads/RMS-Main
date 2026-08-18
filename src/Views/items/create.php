@@ -10,7 +10,21 @@
 </div>
 <?php endif ?>
 
-<form action="/items/create" method="POST">
+<?php
+  $effectivePrice = (float) ($old['price'] ?? 0);
+  $net = round($effectivePrice / 1.16, 2);
+  $vat = round($effectivePrice - $net, 2);
+  $recipeQty = [];
+  if (!empty($old['quantity']) && is_array($old['quantity'])) {
+      foreach ($old['quantity'] as $ingredientId => $qty) {
+          if ((float) $qty > 0) {
+              $recipeQty[(int) $ingredientId] = (float) $qty;
+          }
+      }
+  }
+?>
+
+<form action="/admin/items/create" method="POST">
   <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
   <label>Name
     <input type="text" name="name" value="<?= htmlspecialchars($old['name'] ?? '') ?>" required>
@@ -23,6 +37,13 @@
   <label>Price (KES)
     <input type="number" name="price" step="0.01" min="0" value="<?= htmlspecialchars($old['price'] ?? '') ?>" required>
   </label>
+
+  <?php if ($effectivePrice > 0) : ?>
+  <p class="muted">
+    Net amount: KES <?= number_format($net, 2) ?>
+    &mdash; VAT (16%): KES <?= number_format($vat, 2) ?>
+  </p>
+  <?php endif ?>
 
   <label>Category
     <select name="category_id">
@@ -40,9 +61,11 @@
     Is a combo
   </label>
 
+  <?php include __DIR__ . '/recipe_fields.php' ?>
+
   <button type="submit">Create</button>
 </form>
 
-<a href="/items" class="button-outline" style="margin-top: 12px; display: inline-block;">
+<a href="/admin/items" class="button-outline" style="margin-top: 12px; display: inline-block;">
   ← Back to Items
 </a>

@@ -32,6 +32,14 @@ class OrderService
     }
 
     /**
+     * @return array<int, Order>
+     */
+    public function getOrdersByUserId(int $userId): array
+    {
+        return $this->orderRepository->findOrdersByUserId($userId);
+    }
+
+    /**
      * @param array<int, array{menu_item_id: int, quantity: int}> $items
      * @return array<string, mixed>
      * @throws Throwable

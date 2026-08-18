@@ -1,5 +1,8 @@
--- RBAC seed: permissions and role assignments
+-- RBAC seed: roles, permissions and role assignments
 -- Run: mysql -uuser -ppassword rms < sql/seed_rbac.sql
+
+-- Core roles (idempotent)
+INSERT IGNORE INTO roles (name) VALUES ('MANAGER'), ('WAITER');
 
 INSERT IGNORE INTO permissions (name) VALUES
     ('dashboard.view'),
@@ -11,12 +14,25 @@ INSERT IGNORE INTO permissions (name) VALUES
     ('users.deactivate'),
     ('roles.view'),
     ('roles.create'),
+    ('roles.update'),
+    ('roles.deactivate'),
     ('menu.view'),
-    ('menu.create');
+    ('menu.create'),
+    ('menu.update'),
+    ('menu.deactivate'),
+    ('categories.view'),
+    ('categories.create'),
+    ('categories.update'),
+    ('categories.deactivate'),
+    ('inventory.view'),
+    ('inventory.create'),
+    ('inventory.update'),
+    ('inventory.deactivate');
 
--- MANAGER role id = 1: grant everything
+-- MANAGER role: grant everything
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
-SELECT 1, id FROM permissions;
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
+WHERE r.name = 'MANAGER';
 
 -- WAITER role id = 2: no admin permissions (kiosk is auth-only)
 -- (deliberately empty)

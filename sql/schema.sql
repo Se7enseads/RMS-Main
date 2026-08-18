@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS roles
 (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(100) NOT NULL UNIQUE,
+    active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -55,11 +56,17 @@ CREATE TABLE IF NOT EXISTS role_permissions
 
 CREATE TABLE IF NOT EXISTS inventory
 (
-    id         INT PRIMARY KEY AUTO_INCREMENT,
-    name       VARCHAR(100) NOT NULL UNIQUE,
-    unit       VARCHAR(50)  NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id                 INT PRIMARY KEY AUTO_INCREMENT,
+    name               VARCHAR(100) NOT NULL UNIQUE,
+    base_unit          ENUM('g','ml','pcs')   NOT NULL DEFAULT 'pcs',
+    receive_unit       ENUM('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
+    units_per_container DECIMAL(8, 2),
+    stock              DECIMAL(12, 3) NOT NULL DEFAULT 0,
+    cost_per_unit      DECIMAL(12, 4) NOT NULL DEFAULT 0,
+    reorder_level      DECIMAL(12, 3) NOT NULL DEFAULT 0,
+    active             BOOLEAN        NOT NULL DEFAULT TRUE,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS inventory_movements
@@ -71,6 +78,8 @@ CREATE TABLE IF NOT EXISTS inventory_movements
     reference_type ENUM ('ORDER', 'MANUAL', 'STOCK_TAKE'),
     reference_id   INT,
     performed_by   INT                              NOT NULL,
+    unit           ENUM('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
+    unit_cost      DECIMAL(12, 4) NOT NULL DEFAULT 0,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (inventory_id) REFERENCES inventory (id),
