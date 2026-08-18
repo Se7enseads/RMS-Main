@@ -10,7 +10,7 @@
 </div>
 <?php endif ?>
 
-<form action="/store/ingredients/edit/<?= $ingredient->id ?>" method="POST">
+<form action="/store/inventory/edit/<?= $ingredient->id ?>" method="POST">
   <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
 
   <label>Name

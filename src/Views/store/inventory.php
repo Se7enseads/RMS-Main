@@ -1,6 +1,6 @@
 <h1>Store Inventory</h1>
 
-<a href="/store/ingredients/create" class="button button-primary">+ Create New Ingredient</a>
+<a href="/store/inventory/create" class="button button-primary">+ Create New Ingredient</a>
 
 <div id="ingredients-table"></div>
 
@@ -75,9 +75,9 @@
         width: 250,
         formatter: (cell) => {
           const id = cell.getValue();
-          return '<a href="/store/ingredients/' + id + '/stock" class="button-primary action-button">+ Stock</a> ' +
-            '<a href="/store/ingredients/edit/' + id + '" class="button-outline action-button">Edit</a> ' +
-            '<form action="/store/ingredients/deactivate/' + id + '" method="POST" class="inline-form">' +
+          return '<a href="/store/inventory/stock/' + id + '" class="button-primary action-button">+ Stock</a> ' +
+            '<a href="/store/inventory/edit/' + id + '" class="button-outline action-button">Edit</a> ' +
+            '<form action="/store/inventory/deactivate/' + id + '" method="POST" class="inline-form">' +
             '<input type="hidden" name="csrf_token" value="' + csrfToken + '">' +
             '<button type="submit" class="button-danger action-button" onclick="return confirm(\'Are you sure?\')">Deactivate</button>' +
             '</form>';
@@ -86,7 +86,7 @@
     ],
     rowClick: (e, row) => {
       if (e.target.closest('a, form, button, input')) return;
-      window.location.href = '/store/ingredients/' + row.getData().id + '/stock';
+      window.location.href = '/store/inventory/stock/' + row.getData().id;
     },
   });
 </script>

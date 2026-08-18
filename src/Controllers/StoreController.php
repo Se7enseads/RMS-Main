@@ -33,7 +33,7 @@ class StoreController
         $result = $this->ingredientService->createIngredient($data);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
@@ -61,7 +61,7 @@ class StoreController
         $result = $this->ingredientService->updateIngredient($id, $data);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
@@ -79,7 +79,7 @@ class StoreController
         if ($ingredient) {
             $this->ingredientService->setIngredientActive($id, !$ingredient->active);
         }
-        Redirect::to('/store');
+        Redirect::to('/store/inventory');
     }
 
     public function stockForm(int $id): void
@@ -107,7 +107,7 @@ class StoreController
         $result = $this->ingredientService->addStock($id, $_POST, $userId);
 
         if ($result['success']) {
-            Redirect::to('/store');
+            Redirect::to('/store/inventory');
             return;
         }
 
