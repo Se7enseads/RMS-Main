@@ -38,86 +38,162 @@
 
 .order-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
 }
 
-.order-card {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-left: 4px solid var(--primary-light);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    box-shadow: var(--shadow);
+/* ── Receipt-style order cards (matching bar/kitchen display) ── */
+
+.receipt-card {
+    background: #fff;
+    border: 1px dashed #9aa3af;
+    border-radius: 4px;
+    padding: 14px 16px 16px;
+    font-family: ui-monospace, "Courier New", monospace;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.order-card.open {
-    border-left-color: var(--accent);
-}
-
-.voided-card {
-    opacity: 0.6;
-    border-left-color: var(--text-muted);
-}
-
-.order-meta {
+.receipt-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-}
-
-.order-number {
+    font-size: 0.85rem;
     font-weight: 700;
-    color: var(--text);
+    gap: 8px;
 }
 
-.order-amount {
-    font-size: 1.3rem;
+.receipt-store {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.receipt-order {
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.receipt-status {
+    font-size: 0.72rem;
     font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 8px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+    color: #fff;
+    white-space: nowrap;
 }
 
-.order-details {
+.receipt-status.open {
+    background: var(--accent-light);
+}
+
+.receipt-status.unpaid {
+    background: var(--danger);
+}
+
+.receipt-status.paid {
+    background: var(--secondary);
+}
+
+.receipt-meta {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 8px;
     font-size: 0.8rem;
     color: var(--text-muted);
     flex-wrap: wrap;
 }
 
-.order-status {
-    font-size: 0.72rem;
+.receipt-rule {
+    border-top: 1px dotted #9aa3af;
+    height: 0;
+}
+
+.receipt-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.receipt-items li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.receipt-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.receipt-item-price {
+    white-space: nowrap;
+}
+
+.receipt-footer {
+    display: flex;
+    justify-content: space-between;
     font-weight: 700;
-    text-transform: uppercase;
-    background: var(--accent-light);
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 99px;
+    font-size: 0.95rem;
+    border-top: 1px dotted #9aa3af;
+    padding-top: 8px;
 }
 
-.order-payment {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    background: var(--secondary);
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 99px;
+.receipt-total {
+    color: var(--primary);
 }
 
-.dashboard-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+.receipt-actions {
+    margin: 4px -16px -16px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 4px 4px;
 }
 
-.dashboard-section h3 {
+.receipt-actions .button {
+    width: 100%;
+}
+
+/* ── Collapsible sections (like the kitchen served history) ── */
+
+.kiosk-section {
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 12px 16px;
+}
+
+.kiosk-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    color: var(--text-muted);
+    list-style-position: inside;
+}
+
+.kiosk-section summary:hover {
+    color: var(--text);
+}
+
+.kiosk-section[open] summary {
+    margin-bottom: 12px;
+}
+
+.section-title {
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 10px;
 }
 
 .section-title.unpaid {
@@ -126,8 +202,4 @@
 
 .section-title.paid {
     color: var(--secondary);
-}
-
-.section-title.voided {
-    color: var(--text-muted);
 }

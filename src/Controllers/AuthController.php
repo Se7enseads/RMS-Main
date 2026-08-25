@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\AuthService;
 
 class AuthController
@@ -60,6 +62,7 @@ class AuthController
         }
 
         if ($result['success']) {
+            Logger::add($result['user']->id, Action::fromRequest('Staff logged in'));
             Redirect::to($this->homePath($result['user']->roleName));
             return;
         }
@@ -72,7 +75,9 @@ class AuthController
 
     public function logout(): void
     {
+        $userId = (int)Session::get('user_id');
         $this->authService->logout();
+        Logger::add($userId, Action::fromRequest('Staff logged out'));
         Redirect::to('/login');
     }
 

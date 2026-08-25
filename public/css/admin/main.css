@@ -4,3 +4,66 @@
 @import url('store.css');
 @import url('users.css');
 @import url('roles.css');
+/* ── Reports ── */
+
+.report-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.report-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.report-filters input[type="date"] {
+    margin-top: 0;
+}
+
+.report-title {
+    margin: 28px 0 12px;
+    font-size: 1.05rem;
+    color: var(--primary-dark);
+}
+
+.report-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.report-toolbar .button {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+/* ── Print ── */
+
+@media print {
+    .sidebar,
+    .sidebar-footer,
+    .report-toolbar,
+    footer,
+    .no-print {
+        display: none !important;
+    }
+
+    .kiosk-main {
+        margin: 0;
+    }
+
+    .kiosk-content {
+        padding: 0;
+    }
+
+    .plain-table input {
+        border: none;
+        padding: 0;
+    }
+}

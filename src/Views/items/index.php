@@ -2,6 +2,10 @@
 
 <a href="/admin/items/create" class="button button-primary">+ Create New Item</a>
 
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableItems.print(true)">Print</button>
+</div>
+
 <div id="items-table"></div>
 
 <script>
@@ -16,7 +20,7 @@
   ], $items)) ?>;
   const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
 
-  new Tabulator('#items-table', {
+  const tableItems = new Tabulator('#items-table', {
     data: itemsData,
     layout: 'fitColumns',
     pagination: true,
@@ -36,6 +40,7 @@
         title: 'Actions',
         field: 'id',
         width: 200,
+        print: false,
         formatter: (cell) => {
           const id = cell.getValue();
           return '<a href="/admin/items/edit/' + id + '" class="button-outline action-button">Edit</a> ' +

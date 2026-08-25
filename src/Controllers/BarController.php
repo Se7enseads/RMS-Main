@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Repositories\TableRepository;
 use App\Services\BarService;
 use App\Services\MenuService;
@@ -81,6 +83,7 @@ class BarController
         $result = $this->orderService->placeOrder($userId, $type, $tableId, $validItems);
 
         if ($result['success']) {
+            Logger::add($userId, Action::fromRequest('Order placed: ' . $result['order']->orderNumber));
             Redirect::to('/bar');
             return;
         }
@@ -91,6 +94,7 @@ class BarController
     public function serve(int $id): void
     {
         $this->barService->markServed($id);
+        Logger::add((int)Session::get('user_id'), Action::fromRequest('Bar order item served: ' . $id));
         Redirect::to('/bar');
     }
 

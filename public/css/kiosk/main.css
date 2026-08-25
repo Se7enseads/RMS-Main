@@ -1,6 +1,74 @@
 @import url('dashboard.css');
 @import url('order.css');
+@import url('payments.css');
 
 .kiosk-content h1 {
     margin-bottom: 19px;
+}
+
+/* ── Bill printing ── */
+.bill-page {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.bill-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.bill-hint {
+    width: 100%;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.bill-receipt {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 0;
+}
+
+.bill-receipt svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+@media print {
+    .sidebar,
+    .bill-toolbar,
+    .no-print {
+        display: none !important;
+    }
+
+    .kiosk-main {
+        margin: 0;
+    }
+
+    .kiosk-content {
+        padding: 0;
+    }
+
+    .bill-page {
+        max-width: none;
+        margin: 0;
+    }
+
+    .bill-receipt {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+    }
+
+    .bill-receipt svg {
+        width: 80mm;
+        max-width: none;
+    }
 }

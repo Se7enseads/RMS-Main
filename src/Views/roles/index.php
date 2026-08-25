@@ -1,6 +1,10 @@
-<h1>Role List</h1>
+<h1>Roles</h1>
 
 <a href="/admin/roles/create" class="button button-primary">+ Create New Role</a>
+
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableRoles.print(true)">Print</button>
+</div>
 
 <div id="roles-table"></div>
 
@@ -12,7 +16,7 @@
   ], $roles)) ?>;
   const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
 
-  new Tabulator('#roles-table', {
+  const tableRoles = new Tabulator('#roles-table', {
     data: rolesData,
     layout: 'fitColumns',
     pagination: true,
@@ -28,6 +32,7 @@
         title: 'Actions',
         field: 'id',
         width: 200,
+        print: false,
         formatter: (cell) => {
           const id = cell.getValue();
           return '<a href="/admin/roles/edit/' + id + '" class="button-outline action-button">Edit</a> ' +

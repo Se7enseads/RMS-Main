@@ -2,9 +2,12 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
+use App\Repositories\RestaurantRepository;
 use App\Repositories\TableRepository;
 use App\Services\MenuService;
 use App\Services\OrderService;
@@ -32,12 +35,9 @@ class KioskController
 
         $todayPaid = [];
         $todayUnpaid = [];
-        $todayVoided = [];
 
         foreach ($orders as $order) {
-            if ($order->isCancelled()) {
-                $todayVoided[] = $order;
-            } elseif ($order->isPaid) {
+            if ($order->isPaid) {
                 $todayPaid[] = $order;
             } else {
                 $todayUnpaid[] = $order;
@@ -48,7 +48,7 @@ class KioskController
             'openOrders' => $openOrders,
             'todayPaid' => $todayPaid,
             'todayUnpaid' => $todayUnpaid,
-            'todayVoided' => $todayVoided,
+            'itemsByOrderId' => $data['itemsByOrderId'],
             'date' => $data['date'],
             'dateFilter' => $date,
         ]);
@@ -62,6 +62,20 @@ class KioskController
         View::render('kiosk/order', [
             'menu' => $menu,
             'tables' => $tables,
+        ]);
+    }
+
+    public function payments(): void
+    {
+        $date = $_GET['date'] ?? null;
+        $data = $this->orderService->getPaymentsData($date);
+
+        View::render('kiosk/payments', [
+            'orders' => $data['orders'],
+            'paidTotal' => $data['paidTotal'],
+            'unpaidTotal' => $data['unpaidTotal'],
+            'date' => $data['date'],
+            'dateFilter' => $date,
         ]);
     }
 
@@ -86,6 +100,7 @@ class KioskController
         $result = $this->orderService->placeOrder($userId, $type, $tableId, $items);
 
         if ($result['success']) {
+            Logger::add($userId, Action::fromRequest('Order placed: ' . $result['order']->orderNumber));
             Redirect::to('/kiosk');
             return;
         }
@@ -94,6 +109,25 @@ class KioskController
             'menu' => $this->menuService->getMenuGroupedByCategory(),
             'tables' => $this->tableRepository->findAvailable(),
             'error' => $result['error'],
+        ]);
+    }
+
+    public function bill(int $id): void
+    {
+        $data = $this->orderService->getOrderBill($id);
+
+        if (!$data) {
+            http_response_code(404);
+            View::render('errors/404');
+            return;
+        }
+
+        Logger::add((int)Session::get('user_id'), Action::fromRequest('Bill printed: ' . $data['order']->orderNumber));
+
+        View::render('kiosk/bill', [
+            'order' => $data['order'],
+            'items' => $data['items'],
+            'restaurant' => (new RestaurantRepository())->getDetails() ?? [],
         ]);
     }
 }

@@ -8,6 +8,16 @@ use App\Repositories\UserRepository;
 
 class UserService
 {
+    private const COMMON_PASSWORDS = [
+        'password', 'password1', 'password12', 'password123', 'password1234', 'password123!',
+        '123456', '1234567', '12345678', '123456789', '1234567890', '12345678910',
+        'qwerty', 'qwerty123', 'qwerty123!', 'abc123', 'admin', 'admin123', 'admin123!',
+        'letmein', 'welcome', 'welcome1', 'iloveyou', 'monkey', 'dragon',
+        'sunshine', 'princess', 'football', 'superman', 'batman', 'trustno1',
+        'passw0rd', 'p@ssw0rd', 'p@ssw0rd1234', 'changeme', 'master', 'shadow',
+        '000000', '111111', '11111111', '121212', '123123', '654321', '666666', '888888',
+    ];
+
     private UserRepository $userRepository;
     private RoleRepository $roleRepository;
 
@@ -61,26 +71,27 @@ class UserService
     }
 
     /**
-     * @parameter array<int, mixed> $data
+     * @param array<int, mixed> $data
      * @return array<string, mixed>
      */
     public function updateUser(int $id, array $data): array
     {
-        $errors = $this->validateUserData($data, $id);
+        $existing = $this->userRepository->findById($id);
+        if (!$existing) {
+            return ['success' => false, 'errors' => ['user' => 'User not found.']];
+        }
+
+        // employee_num and national_id are immutable
+        $data['employee_num'] = $existing->employeeNum;
+        $data['national_id'] = $existing->nationalId;
+
+        $errors = $this->validateUserData($data);
 
         if ($errors) {
             return ['success' => false, 'errors' => $errors];
         }
 
-        $existing = $this->userRepository->findByEmployeeNum($data['employee_num']);
-        if ($existing && $existing->id !== $id) {
-            return ['success' => false, 'errors' => ['employee_num' => 'Employee number already exists.']];
-        }
-
-        $existingNid = $this->userRepository->findByNationalId($data['national_id']);
-        if ($existingNid && $existingNid->id !== $id) {
-            return ['success' => false, 'errors' => ['national_id' => 'National ID already exists.']];
-        }
+        $data['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
         $user = $this->userRepository->update($id, $data);
         return ['success' => true, 'user' => $user];
@@ -99,10 +110,9 @@ class UserService
 
     /**
      * @parameter array<int, mixed> $data
-     * @param int|null $excludeId Skip uniqueness checks for this user
      * @return array<string,string>
      */
-    private function validateUserData(array $data, ?int $excludeId = null): array
+    private function validateUserData(array $data): array
     {
         $errors = [];
 
@@ -126,9 +136,24 @@ class UserService
             $errors['pin'] = 'PIN is required.';
         }
 
-        if (empty($data['password']) || strlen($data['password']) < 8) {
-            if ($excludeId === null) {
-                $errors['password'] = 'Password must be at least 8 characters.';
+        if (empty($data['password'])) {
+            $errors['password'] = 'Password is required.';
+        } else {
+            $roleName = null;
+            if (!empty($data['role_id'])) {
+                $role = $this->roleRepository->findById((int)$data['role_id']);
+                if ($role) {
+                    $roleName = $role->name;
+                }
+            }
+
+            $passwordError = $this->validatePassword($data['password'], $roleName, [
+                $data['first_name'] ?? '',
+                $data['middle_name'] ?? '',
+                $data['last_name'] ?? '',
+            ]);
+            if ($passwordError) {
+                $errors['password'] = $passwordError;
             }
         }
 
@@ -139,5 +164,35 @@ class UserService
         }
 
         return $errors;
+    }
+
+    /**
+     * @param array<int, string> $nameParts
+     */
+    private function validatePassword(string $password, ?string $roleName, array $nameParts): ?string
+    {
+        $length = strlen($password);
+        if ($length < 12) {
+            return 'Password must be at least 12 characters.';
+        }
+        if ($length > 64) {
+            return 'Password must be at most 64 characters.';
+        }
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            return 'Password must contain at least one special character.';
+        }
+        if (in_array(strtolower($password), self::COMMON_PASSWORDS, true)) {
+            return 'Password is too common. Choose a stronger one.';
+        }
+
+        $lower = strtolower($password);
+        foreach (array_merge($nameParts, [$roleName]) as $part) {
+            $part = trim((string)$part);
+            if (strlen($part) >= 3 && str_contains($lower, strtolower($part))) {
+                return 'Password must not contain the user\'s name or role.';
+            }
+        }
+
+        return null;
     }
 }

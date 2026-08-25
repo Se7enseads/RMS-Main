@@ -17,17 +17,17 @@ class UserRepository
 
     public function countActive(): int
     {
-        $stmt = $this->db->query("SELECT COUNT(*) FROM users WHERE active = 1");
+        $stmt = $this->db->query("SELECT COUNT(*) FROM staff WHERE active = 1");
         return (int) $stmt->fetchColumn();
     }
 
     public function findAllActive(): array
     {
         $sql = "
-            SELECT users.*, roles.name AS role_name
-            FROM users
-            LEFT JOIN roles ON users.role_id = roles.id
-            WHERE users.active = 1
+            SELECT staff.*, roles.name AS role_name
+            FROM staff
+            LEFT JOIN roles ON staff.role_id = roles.id
+            WHERE staff.active = 1
         ";
         $stmt = $this->db->query($sql);
 
@@ -37,10 +37,10 @@ class UserRepository
     public function findById(int $id): ?User
     {
         $sql = "
-            SELECT users.*, roles.name AS role_name
-            FROM users
-            LEFT JOIN roles ON users.role_id = roles.id
-            WHERE users.id = :id
+            SELECT staff.*, roles.name AS role_name
+            FROM staff
+            LEFT JOIN roles ON staff.role_id = roles.id
+            WHERE staff.id = :id
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -52,10 +52,10 @@ class UserRepository
     public function findByPin(string $pin): ?User
     {
         $sql = "
-            SELECT users.*, roles.name AS role_name
-            FROM users
-            LEFT JOIN roles ON users.role_id = roles.id
-            WHERE users.pin = :pin
+            SELECT staff.*, roles.name AS role_name
+            FROM staff
+            LEFT JOIN roles ON staff.role_id = roles.id
+            WHERE staff.pin = :pin
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['pin' => $pin]);
@@ -67,10 +67,10 @@ class UserRepository
     public function findByEmployeeNum(string $employeeNum): ?User
     {
         $sql = "
-            SELECT users.*, roles.name AS role_name
-            FROM users
-            LEFT JOIN roles ON users.role_id = roles.id
-            WHERE users.employee_num = :employee_num
+            SELECT staff.*, roles.name AS role_name
+            FROM staff
+            LEFT JOIN roles ON staff.role_id = roles.id
+            WHERE staff.employee_num = :employee_num
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['employee_num' => $employeeNum]);
@@ -82,10 +82,10 @@ class UserRepository
     public function findByNationalId(string $nationalId): ?User
     {
         $sql = "
-            SELECT users.*, roles.name AS role_name
-            FROM users
-            LEFT JOIN roles ON users.role_id = roles.id
-            WHERE users.national_id = :national_id
+            SELECT staff.*, roles.name AS role_name
+            FROM staff
+            LEFT JOIN roles ON staff.role_id = roles.id
+            WHERE staff.national_id = :national_id
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['national_id' => $nationalId]);
@@ -98,7 +98,7 @@ class UserRepository
      */
     public function insert(array $data): User
     {
-        $sql = "INSERT INTO users (employee_num, first_name, middle_name, last_name, national_id, pin, pin_hash, password_hash, phone_number, role_id, active)
+        $sql = "INSERT INTO staff (employee_num, first_name, middle_name, last_name, national_id, pin, pin_hash, password_hash, phone_number, role_id, active)
                 VALUES (:employee_num, :first_name, :middle_name, :last_name, :national_id, :pin, :pin_hash, :password_hash, :phone_number, :role_id, 1)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
@@ -122,7 +122,7 @@ class UserRepository
      */
     public function update(int $id, array $data): ?User
     {
-        $sql = "UPDATE users
+        $sql = "UPDATE staff
                 SET employee_num = :employee_num,
                     first_name = :first_name,
                     middle_name = :middle_name,
@@ -130,7 +130,8 @@ class UserRepository
                     national_id = :national_id,
                     pin = :pin,
                     phone_number = :phone_number,
-                    role_id = :role_id
+                    role_id = :role_id,
+                    password_hash = COALESCE(:password_hash, password_hash)
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
@@ -142,6 +143,7 @@ class UserRepository
             'pin' => $data['pin'],
             'phone_number' => $data['phone_number'] ?? null,
             'role_id' => (int) $data['role_id'],
+            'password_hash' => $data['password_hash'] ?? null,
             'id' => $id,
         ]);
 
@@ -150,7 +152,7 @@ class UserRepository
 
     public function deactivate(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE users SET active = 0 WHERE id = :id");
+        $stmt = $this->db->prepare("UPDATE staff SET active = 0 WHERE id = :id");
         return $stmt->execute(['id' => $id]);
     }
 }

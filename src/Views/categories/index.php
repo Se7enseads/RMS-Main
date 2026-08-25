@@ -1,6 +1,10 @@
-<h1>Category List</h1>
+<h1>Categories</h1>
 
 <a href="/admin/categories/create" class="button button-primary">+ Create New Category</a>
+
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableCategories.print(true)">Print</button>
+</div>
 
 <div id="categories-table"></div>
 
@@ -13,7 +17,7 @@
   ], $categories)) ?>;
   const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
 
-  new Tabulator('#categories-table', {
+  const tableCategories = new Tabulator('#categories-table', {
     data: categoriesData,
     layout: 'fitColumns',
     pagination: true,
@@ -30,6 +34,7 @@
         title: 'Actions',
         field: 'id',
         width: 200,
+        print: false,
         formatter: (cell) => {
           const id = cell.getValue();
           return '<a href="/admin/categories/edit/' + id + '" class="button-outline action-button">Edit</a> ' +

@@ -25,7 +25,7 @@ class MenuService
 
         $itemsByCategory = [];
         foreach ($items as $item) {
-            $itemsByCategory[$item->categoryId][] = $item;
+            $itemsByCategory[(int) $item->categoryId][] = $item;
         }
 
         $grouped = [];

@@ -26,6 +26,10 @@
     <input type="date" name="take_date" value="<?= htmlspecialchars($old['take_date'] ?? date('Y-m-d')) ?>" required>
   </label>
 
+  <div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="window.print()">Print</button>
+  </div>
+
   <table class="plain-table">
     <thead>
       <tr>

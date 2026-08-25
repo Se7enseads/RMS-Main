@@ -56,34 +56,34 @@ CREATE TABLE IF NOT EXISTS role_permissions
 
 CREATE TABLE IF NOT EXISTS inventory
 (
-    id                 INT PRIMARY KEY AUTO_INCREMENT,
-    name               VARCHAR(100) NOT NULL UNIQUE,
-    base_unit          ENUM('g','ml','pcs')   NOT NULL DEFAULT 'pcs',
-    receive_unit       ENUM('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
+    id                  INT PRIMARY KEY AUTO_INCREMENT,
+    name                VARCHAR(100)                                         NOT NULL UNIQUE,
+    base_unit           ENUM ('g','ml','pcs')                                NOT NULL DEFAULT 'pcs',
+    receive_unit        ENUM ('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
     units_per_container DECIMAL(8, 2),
-    stock              DECIMAL(12, 3) NOT NULL DEFAULT 0,
-    cost_per_unit      DECIMAL(12, 4) NOT NULL DEFAULT 0,
-    reorder_level      DECIMAL(12, 3) NOT NULL DEFAULT 0,
-    active             BOOLEAN        NOT NULL DEFAULT TRUE,
-    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    stock               DECIMAL(12, 3)                                       NOT NULL DEFAULT 0,
+    cost_per_unit       DECIMAL(12, 4)                                       NOT NULL DEFAULT 0,
+    reorder_level       DECIMAL(12, 3)                                       NOT NULL DEFAULT 0,
+    active              BOOLEAN                                              NOT NULL DEFAULT TRUE,
+    created_at          TIMESTAMP                                                     DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP                                                     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS inventory_movements
 (
     id             INT PRIMARY KEY AUTO_INCREMENT,
-    inventory_id   INT                              NOT NULL,
-    movement_type  ENUM ('IN', 'OUT', 'ADJUSTMENT') NOT NULL,
-    quantity       DECIMAL(10, 2)                   NOT NULL,
+    inventory_id   INT                                                  NOT NULL,
+    movement_type  ENUM ('IN', 'OUT', 'ADJUSTMENT')                     NOT NULL,
+    quantity       DECIMAL(10, 2)                                       NOT NULL,
     reference_type ENUM ('ORDER', 'MANUAL', 'STOCK_TAKE'),
     reference_id   INT,
-    performed_by   INT                              NOT NULL,
-    unit           ENUM('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
-    unit_cost      DECIMAL(12, 4) NOT NULL DEFAULT 0,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    performed_by   INT                                                  NOT NULL,
+    unit           ENUM ('g','ml','pcs','case','packet','carton','box') NOT NULL DEFAULT 'pcs',
+    unit_cost      DECIMAL(12, 4)                                       NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP                                                     DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (inventory_id) REFERENCES inventory (id),
-    FOREIGN KEY (performed_by) REFERENCES users (id),
+    FOREIGN KEY (performed_by) REFERENCES staff (id),
 
     INDEX (created_at),
     INDEX (movement_type),
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS stock_takes
     take_date    DATE                NOT NULL,
     performed_by INT                 NOT NULL,
     notes        VARCHAR(255),
-    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP                    DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (performed_by) REFERENCES users (id),
+    FOREIGN KEY (performed_by) REFERENCES staff (id),
 
     INDEX (take_date),
     INDEX (scope)
@@ -130,12 +130,12 @@ CREATE TABLE IF NOT EXISTS stock_take_items
 CREATE TABLE IF NOT EXISTS menu_categories
 (
     id         INT PRIMARY KEY AUTO_INCREMENT,
-    name       VARCHAR(100) NOT NULL,
+    name       VARCHAR(100)            NOT NULL,
     parent_id  INT,
-    active     BOOLEAN   DEFAULT TRUE,
-    station    ENUM('KITCHEN', 'BAR') NOT NULL DEFAULT 'KITCHEN',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    active     BOOLEAN                          DEFAULT TRUE,
+    station    ENUM ('KITCHEN', 'BAR') NOT NULL DEFAULT 'KITCHEN',
+    created_at TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP                        DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (parent_id) REFERENCES menu_categories (id)
 );
@@ -192,15 +192,15 @@ CREATE TABLE IF NOT EXISTS tables
 CREATE TABLE IF NOT EXISTS orders
 (
     id           INT AUTO_INCREMENT PRIMARY KEY,
-    order_number VARCHAR(50)                                    NOT NULL UNIQUE,
+    order_number VARCHAR(50)                                  NOT NULL UNIQUE,
     status       ENUM ('PLACED','SERVED','PAYED','CANCELLED') NOT NULL,
-    type         ENUM ('DINE_IN','TAKEAWAY','DELIVERY')         NOT NULL,
-    staff_id      INT                                            NOT NULL,
+    type         ENUM ('DINE_IN','TAKEAWAY','DELIVERY')       NOT NULL,
+    staff_id     INT                                          NOT NULL,
     table_id     INT,
-    total_amount DECIMAL(12, 2)                                 NOT NULL,
+    total_amount DECIMAL(12, 2)                               NOT NULL,
     closed_at    TIMESTAMP,
-    created_at   TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at   TIMESTAMP                                    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP                                    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (staff_id) REFERENCES staff (id),
     FOREIGN KEY (table_id) REFERENCES tables (id),
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS order_items
     price_at_time DECIMAL(12, 2) NOT NULL,
     quantity      INT            NOT NULL,
     served        TINYINT(1)     NOT NULL DEFAULT 0,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at    TIMESTAMP               DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (order_id) REFERENCES orders (id),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items (id),
@@ -251,15 +251,15 @@ CREATE TABLE IF NOT EXISTS payments
 -- ------------------
 CREATE TABLE IF NOT EXISTS reservation
 (
-    id            INT PRIMARY KEY AUTO_INCREMENT,
-    staff_id       INT          NOT NULL,
-    table_id      INT          NOT NULL,
-    customer_name VARCHAR(100) NOT NULL,
-    reservation_time  TIMESTAMP    NOT NULL,
-    status        ENUM ( 'CANCELLED', 'PAID') DEFAULT 'PAID',
-    payment_id    INT              NOT NULL ,
-    created_at    TIMESTAMP                                               DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP                                               DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id               INT PRIMARY KEY AUTO_INCREMENT,
+    staff_id         INT          NOT NULL,
+    table_id         INT          NOT NULL,
+    customer_name    VARCHAR(100) NOT NULL,
+    reservation_time TIMESTAMP    NOT NULL,
+    status           ENUM ( 'CANCELLED', 'PAID') DEFAULT 'PAID',
+    payment_id       INT          NOT NULL,
+    created_at       TIMESTAMP                   DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP                   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (staff_id) REFERENCES staff (id),
     FOREIGN KEY (table_id) REFERENCES tables (id),
@@ -275,57 +275,54 @@ CREATE TABLE IF NOT EXISTS reservation
 CREATE TABLE IF NOT EXISTS audit_logs
 (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    staff_id    INT          NOT NULL,
+    user_id    INT          NOT NULL,
     action     VARCHAR(255) NOT NULL,
+    method     VARCHAR(10)  NOT NULL DEFAULT 'GET',
+    url        VARCHAR(255) NOT NULL DEFAULT '',
     ip_address VARCHAR(45),
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (staff_id) REFERENCES staff (id),
+    FOREIGN KEY (user_id) REFERENCES staff (id),
     INDEX (created_at)
 );
 
--- License / Subscription Module
--- ----------------------------------
 
-CREATE TABLE IF NOT EXISTS setup_progress -- get better name
-(
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    state       ENUM ('FRESH', 'ACTIVATED', 'LOCKED') NOT NULL DEFAULT 'FRESH',
-    instance_id CHAR(36)                              NOT NULL UNIQUE,
-    created_at  TIMESTAMP                                      DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP                                      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+-- Report Views
+-- --------------------
 
-    INDEX (state)
-);
+CREATE OR REPLACE VIEW v_sales_by_day AS
+SELECT DATE(o.created_at) AS day,
+       COUNT(*) AS orders,
+       (SELECT COALESCE(SUM(oi.quantity), 0)
+        FROM order_items oi WHERE oi.order_id = o.id) AS items,
+       COALESCE(SUM(o.total_amount), 0) AS revenue,
+       COALESCE(SUM(CASE
+           WHEN EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
+           THEN o.total_amount ELSE 0 END), 0) AS paid,
+       COALESCE(SUM(CASE
+           WHEN NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
+           THEN o.total_amount ELSE 0 END), 0) AS unpaid
+FROM orders o
+WHERE o.status <> 'CANCELLED'
+GROUP BY DATE(o.created_at);
 
-CREATE TABLE IF NOT EXISTS license
-(
-    id               INT AUTO_INCREMENT PRIMARY KEY,
-    license_key      TEXT      NOT NULL,
-    edition          ENUM ('SMALL', 'MEDIUM')              DEFAULT 'SMALL',
-    max_users        INT                                   DEFAULT 5,
-    expiry_date      DATE      NOT NULL,
-    status           ENUM ('ACTIVE', 'EXPIRED', 'REVOKED') DEFAULT 'ACTIVE',
-    created_at       TIMESTAMP                             DEFAULT CURRENT_TIMESTAMP,
-    last_verified_at TIMESTAMP NULL,
+CREATE OR REPLACE VIEW v_item_sales_by_day AS
+SELECT DATE(o.created_at) AS day,
+       mi.name AS item,
+       COALESCE(mc.name, 'Uncategorised') AS category,
+       SUM(oi.quantity) AS quantity,
+       SUM(oi.quantity * oi.price_at_time) AS revenue
+FROM order_items oi
+INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+LEFT JOIN menu_categories mc ON mc.id = mi.category_id
+INNER JOIN orders o ON o.id = oi.order_id
+WHERE o.status <> 'CANCELLED'
+GROUP BY DATE(o.created_at), mi.id, mi.name, mc.name;
 
-    INDEX (license_key),
-    INDEX (edition),
-    INDEX (status)
-);
-
-CREATE TABLE IF NOT EXISTS restaurant_details
-(
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    name       VARCHAR(200) NOT NULL,
-    address    TEXT,
-    phone      VARCHAR(50),
-    email      VARCHAR(100),
-    currency   VARCHAR(10) DEFAULT 'KES',
-    created_by INT          NOT NULL,
-    created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (created_by) REFERENCES staff (id),
-    INDEX (name)
-);
+CREATE OR REPLACE VIEW v_payments_by_day AS
+SELECT DATE(created_at) AS day,
+       method,
+       COUNT(*) AS count,
+       SUM(amount) AS total
+FROM payments
+GROUP BY DATE(created_at), method;

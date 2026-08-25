@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Repositories\MenuRepository;
 use App\Repositories\OrderRepository;
 use Throwable;
@@ -25,9 +26,18 @@ class OrderService
     {
         $date = $date ?? date('Y-m-d');
 
+        $openOrders = $this->orderRepository->findOpenOrders();
+        $orders = $this->orderRepository->findOrdersForDate($date);
+
+        $orderIds = array_values(array_unique(array_map(
+            fn(Order $order) => $order->id,
+            array_merge($openOrders, $orders),
+        )));
+
         return [
-            'openOrders' => $this->enrich($this->orderRepository->findOpenOrders()),
-            'orders' => $this->enrich($this->orderRepository->findOrdersForDate($date)),
+            'openOrders' => $this->enrich($openOrders),
+            'orders' => $this->enrich($orders),
+            'itemsByOrderId' => $this->orderRepository->findItemsByOrderIds($orderIds),
             'date' => $date,
         ];
     }
@@ -109,8 +119,65 @@ class OrderService
         return ['success' => true, 'order' => $order];
     }
 
+    /**
+     * Orders for the payments page: unpaid first, then newest first,
+     * excluding cancelled orders.
+     *
+     * @return array{orders: array<int, Order>, paidTotal: float, unpaidTotal: float, date: string}
+     */
+    public function getPaymentsData(?string $date = null): array
+    {
+        $date = $date ?? date('Y-m-d');
+
+        $orders = array_values(array_filter(
+            $this->enrich($this->orderRepository->findOrdersForDate($date)),
+            fn(Order $order) => !$order->isCancelled(),
+        ));
+
+        usort($orders, static function (Order $a, Order $b): int {
+            $paidCmp = ($a->isPaid ? 1 : 0) <=> ($b->isPaid ? 1 : 0);
+            if ($paidCmp !== 0) {
+                return $paidCmp;
+            }
+            return strtotime($b->createdAt ?? '0') <=> strtotime($a->createdAt ?? '0');
+        });
+
+        $paidTotal = 0.0;
+        $unpaidTotal = 0.0;
+        foreach ($orders as $order) {
+            if ($order->isPaid) {
+                $paidTotal += $order->totalAmount;
+            } else {
+                $unpaidTotal += $order->totalAmount;
+            }
+        }
+
+        return [
+            'orders' => $orders,
+            'paidTotal' => $paidTotal,
+            'unpaidTotal' => $unpaidTotal,
+            'date' => $date,
+        ];
+    }
+
     private function generateOrderNumber(): string
     {
         return 'ORD-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+    }
+
+    /**
+     * @return array{order: Order, items: array<int, OrderItem>}|null
+     */
+    public function getOrderBill(int $orderId): ?array
+    {
+        $order = $this->orderRepository->findById($orderId);
+        if (!$order) {
+            return null;
+        }
+
+        return [
+            'order' => $this->enrich([$order])[0],
+            'items' => $this->orderRepository->findItemsByOrderId($orderId),
+        ];
     }
 }

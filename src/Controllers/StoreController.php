@@ -2,9 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
 use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\IngredientService;
 use App\Services\StockTakeService;
 
@@ -53,6 +55,7 @@ class StoreController
         $result = $this->ingredientService->createIngredient($data, (int)Session::get('user_id'));
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Ingredient created: ' . ($data['name'] ?? '')));
             Redirect::to('/store/inventory');
             return;
         }
@@ -81,6 +84,7 @@ class StoreController
         $result = $this->ingredientService->updateIngredient($id, $data);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Ingredient updated: ' . ($data['name'] ?? '')));
             Redirect::to('/store/inventory');
             return;
         }
@@ -98,6 +102,9 @@ class StoreController
         $ingredient = $this->ingredientService->getIngredientById($id);
         if ($ingredient) {
             $this->ingredientService->setIngredientActive($id, !$ingredient->active);
+            Logger::add((int)Session::get('user_id'), Action::fromRequest(
+                ($ingredient->active ? 'Ingredient deactivated: ' : 'Ingredient activated: ') . $ingredient->name
+            ));
         }
         Redirect::to('/store/inventory');
     }
@@ -127,6 +134,7 @@ class StoreController
         $result = $this->ingredientService->addStock($id, $_POST, $userId);
 
         if ($result['success']) {
+            Logger::add($userId, Action::fromRequest('Stock added: ' . $ingredient->name));
             Redirect::to('/store/inventory');
             return;
         }
@@ -174,6 +182,7 @@ class StoreController
         $result = $this->stockTakeService->performTake($scope, $takeDate, $counts, $userId);
 
         if ($result['success']) {
+            Logger::add($userId, Action::fromRequest('Stock take recorded (' . $scope . ')'));
             Redirect::to($scope === 'BAR' ? '/store/variance/bar' : '/store/variance');
             return;
         }

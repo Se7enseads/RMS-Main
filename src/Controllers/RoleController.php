@@ -2,8 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
+use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\RoleService;
 
 class RoleController
@@ -35,6 +38,7 @@ class RoleController
         $result = $this->roleService->createRole($name, $permissionIds);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Role created: ' . $name));
             Redirect::to('/admin/roles');
             return;
         }
@@ -69,6 +73,7 @@ class RoleController
         $result = $this->roleService->updateRole($id, $name, $permissionIds);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Role updated: ' . $name));
             Redirect::to('/admin/roles');
             return;
         }
@@ -87,6 +92,9 @@ class RoleController
         $role = $this->roleService->getRoleById($id);
         if ($role) {
             $this->roleService->setRoleActive($id, !$role->active);
+            Logger::add((int)Session::get('user_id'), Action::fromRequest(
+                ($role->active ? 'Role deactivated: ' : 'Role activated: ') . $role->name
+            ));
         }
         Redirect::to('/admin/roles');
     }

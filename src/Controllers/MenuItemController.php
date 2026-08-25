@@ -2,8 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
+use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\IngredientService;
 use App\Services\MenuService;
 
@@ -44,6 +47,7 @@ class MenuItemController
 
         if ($result['success']) {
             $this->menuService->setRecipe($result['item']->id, $this->parseRecipeRows($data));
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Menu item created: ' . ($data['name'] ?? '')));
             Redirect::to('/admin/items');
             return;
         }
@@ -85,6 +89,7 @@ class MenuItemController
 
         if ($result['success']) {
             $this->menuService->setRecipe($id, $this->parseRecipeRows($data));
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Menu item updated: ' . ($data['name'] ?? '')));
             Redirect::to('/admin/items');
             return;
         }
@@ -108,6 +113,9 @@ class MenuItemController
         $item = $this->menuService->getItemById($id);
         if ($item) {
             $this->menuService->setItemActive($id, !$item->active);
+            Logger::add((int)Session::get('user_id'), Action::fromRequest(
+                ($item->active ? 'Menu item deactivated: ' : 'Menu item activated: ') . $item->name
+            ));
         }
         Redirect::to('/admin/items');
     }

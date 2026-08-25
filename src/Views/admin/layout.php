@@ -3,6 +3,10 @@
 use App\Core\Session;
 
 $userName = Session::get('user_name') ?? '';
+$roleName = Session::get('role_name') ?? '';
+$permissions = $roleName
+    ? (new \App\Repositories\PermissionRepository())->findNamesByRoleName($roleName)
+    : [];
 $navGroups = [
     'Management' => [
         ['href' => '/admin', 'label' => 'Dashboard'],
@@ -10,6 +14,8 @@ $navGroups = [
         ['href' => '/admin/categories', 'label' => 'Categories'],
         ['href' => '/admin/users', 'label' => 'Users'],
         ['href' => '/admin/roles', 'label' => 'Roles'],
+        ['href' => '/admin/logs', 'label' => 'Logs'],
+        ['href' => '/admin/reports', 'label' => 'Reports', 'permission' => 'reports.view'],
     ],
     'Store' => [
         ['href' => '/store', 'label' => 'Dashboard'],
@@ -43,6 +49,9 @@ $navGroups = [
         <?php foreach ($navGroups as $group => $items) : ?>
             <div class="sidebar-group"><?= $group ?></div>
             <?php foreach ($items as $item) : ?>
+                <?php if (isset($item['permission']) && !in_array($item['permission'], $permissions, true)) : ?>
+                    <?php continue; ?>
+                <?php endif ?>
                 <a href="<?= $item['href'] ?>"
                    class="sidebar-link">
                     <?= $item['label'] ?>

@@ -101,6 +101,34 @@ class OrderRepository
     }
 
     /**
+     * @param array<int, int> $orderIds
+     * @return array<int, array<int, OrderItem>> order_id => items
+     */
+    public function findItemsByOrderIds(array $orderIds): array
+    {
+        if (!$orderIds) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+        $stmt = $this->db->prepare("
+            SELECT oi.*, mi.name AS menu_item_name
+            FROM order_items oi
+            INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+            WHERE oi.order_id IN ($placeholders)
+            ORDER BY oi.id ASC
+        ");
+        $stmt->execute(array_values($orderIds));
+
+        $itemsByOrder = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $itemsByOrder[(int) $row['order_id']][] = OrderItem::fromRow($row);
+        }
+
+        return $itemsByOrder;
+    }
+
+    /**
      * Marks the station's items as served and transitions the order to
      * SERVED once every item on the order has been served.
      */
@@ -179,6 +207,88 @@ class OrderRepository
         return (float)$stmt->fetchColumn();
     }
 
+    /**
+     * Sales grouped by day for a date range (view v_sales_by_day).
+     *
+     * @return array<int, array{day: string, orders: int, items: int, revenue: float, paid: float, unpaid: float}>
+     */
+    public function salesByDay(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT day, orders, items, revenue, paid, unpaid
+            FROM v_sales_by_day
+            WHERE day BETWEEN :from AND :to
+            ORDER BY day ASC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'day' => (string) $row['day'],
+                'orders' => (int) $row['orders'],
+                'items' => (int) $row['items'],
+                'revenue' => (float) $row['revenue'],
+                'paid' => (float) $row['paid'],
+                'unpaid' => (float) $row['unpaid'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
+     * Sales grouped by menu item for a date range (view v_item_sales_by_day).
+     *
+     * @return array<int, array{item: string, category: string, quantity: int, revenue: float}>
+     */
+    public function itemSales(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT item, category,
+                   SUM(quantity) AS quantity,
+                   SUM(revenue) AS revenue
+            FROM v_item_sales_by_day
+            WHERE day BETWEEN :from AND :to
+            GROUP BY item, category
+            ORDER BY revenue DESC, quantity DESC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'item' => (string) $row['item'],
+                'category' => (string) $row['category'],
+                'quantity' => (int) $row['quantity'],
+                'revenue' => (float) $row['revenue'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
+     * Payments grouped by method for a date range (view v_payments_by_day).
+     *
+     * @return array<int, array{method: string, count: int, total: float}>
+     */
+    public function paymentMethodSummary(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT method,
+                   SUM(count) AS count,
+                   SUM(total) AS total
+            FROM v_payments_by_day
+            WHERE day BETWEEN :from AND :to
+            GROUP BY method
+            ORDER BY total DESC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'method' => (string) $row['method'],
+                'count' => (int) $row['count'],
+                'total' => (float) $row['total'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
     public function findById(int $id): ?Order
     {
         $stmt = $this->db->prepare($this->orderSelect() . " WHERE o.id = :id");
@@ -194,7 +304,7 @@ class OrderRepository
             SELECT o.*, t.number AS table_number, u.first_name AS user_name
             FROM orders o
             LEFT JOIN tables t ON o.table_id = t.id
-            LEFT JOIN users u ON o.user_id = u.id
+            LEFT JOIN staff u ON o.user_id = u.id
         ";
     }
 

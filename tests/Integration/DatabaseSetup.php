@@ -41,7 +41,7 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE orders');
         $pdo->exec('TRUNCATE TABLE order_items');
         $pdo->exec('TRUNCATE TABLE payments');
-        $pdo->exec('TRUNCATE TABLE users');
+        $pdo->exec('TRUNCATE TABLE staff');
         $pdo->exec('TRUNCATE TABLE role_permissions');
         $pdo->exec('TRUNCATE TABLE permissions');
         $pdo->exec('TRUNCATE TABLE roles');
@@ -52,6 +52,7 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE inventory');
         $pdo->exec('TRUNCATE TABLE stock_take_items');
         $pdo->exec('TRUNCATE TABLE stock_takes');
+        $pdo->exec('TRUNCATE TABLE audit_logs');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -66,7 +67,7 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE orders');
         $pdo->exec('TRUNCATE TABLE order_items');
         $pdo->exec('TRUNCATE TABLE payments');
-        $pdo->exec('TRUNCATE TABLE users');
+        $pdo->exec('TRUNCATE TABLE staff');
         $pdo->exec('TRUNCATE TABLE role_permissions');
         $pdo->exec('TRUNCATE TABLE permissions');
         $pdo->exec('TRUNCATE TABLE roles');
@@ -77,6 +78,7 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE inventory');
         $pdo->exec('TRUNCATE TABLE stock_take_items');
         $pdo->exec('TRUNCATE TABLE stock_takes');
+        $pdo->exec('TRUNCATE TABLE audit_logs');
         $pdo->exec('TRUNCATE TABLE tables');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -106,7 +108,7 @@ class DatabaseSetup
             'menu.update', 'menu.deactivate', 'categories.view', 'categories.create',
             'categories.update', 'categories.deactivate', 'inventory.view', 'inventory.create',
             'inventory.update', 'inventory.deactivate',
-            'inventory.stocktake', 'inventory.variance', 'store.view',
+            'inventory.stocktake', 'inventory.variance', 'log.view', 'reports.view', 'store.view',
         ];
         $permStmt = $pdo->prepare('INSERT INTO permissions (name) VALUES (?)');
         $permissionIds = [];
@@ -123,7 +125,7 @@ class DatabaseSetup
         $grantStmt->execute([$bartenderRoleId, $permissionIds['bar.view']]);
 
         $userStmt = $pdo->prepare(
-            'INSERT INTO users (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
+            'INSERT INTO staff (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
              VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 1)'
         );
         $userStmt->execute(['MGR001', 'Manager', 'Main', '30000001', '1111', password_hash('manager123', PASSWORD_BCRYPT), $managerRoleId]);

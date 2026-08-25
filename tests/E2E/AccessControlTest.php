@@ -40,6 +40,6 @@ class AccessControlTest extends BrowserTestCase
         $this->loginWithPassword('MGR001', 'manager123');
         $this->page->goto($this->baseUrl() . '/admin/users');
 
-        $this->expect($this->page->locator('h1'))->toContainText('User List');
+        $this->expect($this->page->locator('h1'))->toContainText('Users');
     }
 }

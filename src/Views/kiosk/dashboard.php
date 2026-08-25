@@ -1,16 +1,61 @@
-<!-- TODO: have stacked sections than side-by-side, remove open orders -->
-<!-- TODO: remove duplication, (use an invisible Table, if possible) -->
+<?php
+
+use App\Models\Order;
+
+/**
+ * @var array<int, Order> $openOrders
+ * @var array<int, Order> $todayPaid
+ * @var array<int, Order> $todayUnpaid
+ * @var array<int, array<int, \App\Models\OrderItem>> $itemsByOrderId
+ */
+
+$renderCard = function (Order $order, string $badgeClass, string $badgeText) use ($itemsByOrderId): void {
+    ?>
+    <article class="receipt-card">
+        <header class="receipt-header">
+            <span class="receipt-store">RMS</span>
+            <span class="receipt-order"><?= htmlspecialchars($order->orderNumber) ?></span>
+            <span class="receipt-status <?= htmlspecialchars($badgeClass) ?>"><?= htmlspecialchars($badgeText) ?></span>
+        </header>
+        <div class="receipt-meta">
+            <span><?= date('h:i A', strtotime($order->createdAt ?? 'now')) ?></span>
+            <span><?= $order->type === 'DINE_IN' ? 'Table ' . htmlspecialchars($order->tableNumber ?? '—') : htmlspecialchars($order->type) ?></span>
+            <span>Waiter: <?= htmlspecialchars($order->userName ?? '—') ?></span>
+            <span><?= count($itemsByOrderId[$order->id] ?? []) ?> item<?= count($itemsByOrderId[$order->id] ?? []) === 1 ? '' : 's' ?></span>
+        </div>
+        <div class="receipt-rule"></div>
+        <ul class="receipt-items">
+            <?php foreach ($itemsByOrderId[$order->id] ?? [] as $item) : ?>
+                <li>
+                    <span class="receipt-item-name">
+                        <strong><?= (int)$item->quantity ?>x</strong> <?= htmlspecialchars($item->menuItemName) ?>
+                    </span>
+                    <span class="receipt-item-price"><?= number_format($item->priceAtTime * $item->quantity, 2) ?></span>
+                </li>
+            <?php endforeach ?>
+        </ul>
+        <div class="receipt-rule"></div>
+        <footer class="receipt-footer">
+            <span>TOTAL</span>
+            <span class="receipt-total"><?= number_format($order->totalAmount, 2) ?> KES</span>
+        </footer>
+        <div class="receipt-actions">
+            <a href="/kiosk/order/<?= $order->id ?>/bill" target="_blank" class="button button-primary no-print">Print Bill</a>
+        </div>
+    </article>
+    <?php
+};
+?>
+
 <section class="kiosk-dashboard">
 
-    <!--TODO: Fix alignment-->
     <div class="dashboard-header">
         <h1>Dashboard</h1>
         <form method="GET" action="/kiosk" class="date-filter">
             <input type="date" name="date" value="<?= htmlspecialchars($dateFilter ?? '') ?>">
             <button type="submit" class="button button-primary">Filter</button>
             <?php if (!empty($dateFilter)) : ?>
-                <!--TODO: Change to button style-->
-                <a href="/kiosk" class="button-outline">Today</a>
+                <a href="/kiosk" class="button button-outline">Today</a>
             <?php endif ?>
         </form>
     </div>
@@ -21,100 +66,37 @@
     <?php else : ?>
         <div class="order-grid">
             <?php foreach ($openOrders as $order) : ?>
-                <!--TODO: Change card style-->
-                <div class="order-card open">
-                    <div class="order-meta">
-                        <span class="order-number"><?= htmlspecialchars($order->orderNumber) ?></span>
-                        <!--TODO: Fix status button style-->
-                        <span class="order-status"><?= htmlspecialchars($order->status) ?></span>
-                    </div>
-                    <!--TODO: Have the currency icon be from the db too-->
-                    <div class="order-amount"><?= number_format($order->totalAmount, 2) ?>KES</div>
-                    <div class="order-details">
-                        <span>Table <?= htmlspecialchars($order->tableNumber ?? '—') ?></span>
-                        <!--TODO: if count is more than one unit is items-->
-                        <span><?= (int)$order->itemCount ?> items</span>
-                    </div>
-                </div>
+                <?php $renderCard($order, 'open', $order->status); ?>
             <?php endforeach ?>
         </div>
     <?php endif ?>
 
     <h2>Orders for <?= htmlspecialchars($date) ?></h2>
 
-    <div class="dashboard-sections">
-        <div class="dashboard-section">
-            <h3 class="section-title unpaid">Unpaid</h3>
-            <?php if (empty($todayUnpaid)) : ?>
-                <p class="muted">None</p>
-            <?php else : ?>
-                <!-- TODO: Add eating status, dine-in and takeaway-->
-                <div class="order-grid">
-                    <?php foreach ($todayUnpaid as $order) : ?>
-                        <!--TODO: Change card style-->
-                        <div class="order-card">
-                            <div class="order-meta">
-                                <span class="order-number"><?= htmlspecialchars($order->orderNumber) ?></span>
-                                <!--TODO: Fix status button style-->
-                                <span class="order-type"><?= htmlspecialchars($order->status) ?></span>
-                            </div>
-                            <!--TODO: Have the currency icon be from the db too-->
-                            <div class="order-amount"><?= number_format($order->totalAmount, 2) ?></div>
-                            <div class="order-details">
-                                <span>Table <?= htmlspecialchars($order->tableNumber ?? '—') ?></span>
-                                <!--TODO: if count is more than one unit is items-->
-                                <span><?= (int)$order->itemCount ?> items</span>
-                            </div>
-                        </div>
-                    <?php endforeach ?>
-                </div>
-            <?php endif ?>
-        </div>
+    <details class="kiosk-section unpaid" open>
+        <summary><span class="section-title unpaid">Unpaid (<?= count($todayUnpaid) ?>)</span></summary>
+        <?php if (empty($todayUnpaid)) : ?>
+            <p class="muted">None</p>
+        <?php else : ?>
+            <div class="order-grid">
+                <?php foreach ($todayUnpaid as $order) : ?>
+                    <?php $renderCard($order, 'unpaid', $order->status); ?>
+                <?php endforeach ?>
+            </div>
+        <?php endif ?>
+    </details>
 
-        <div class="dashboard-section">
-            <h3 class="section-title paid">Paid</h3>
-            <?php if (empty($todayPaid)) : ?>
-                <p class="muted">None</p>
-            <?php else : ?>
-                <div class="order-grid">
-                    <?php foreach ($todayPaid as $order) : ?>
-                        <div class="order-card">
-                            <div class="order-meta">
-                                <span class="order-number"><?= htmlspecialchars($order->orderNumber) ?></span>
-                                <span class="order-payment"><?= htmlspecialchars($order->paymentMethod ?? 'PAID') ?></span>
-                            </div>
-                            <div class="order-amount"><?= number_format($order->totalAmount, 2) ?></div>
-                            <div class="order-details">
-                                <span>Table <?= htmlspecialchars($order->tableNumber ?? '—') ?></span>
-                                <span><?= (int)$order->itemCount ?> items</span>
-                            </div>
-                        </div>
-                    <?php endforeach ?>
-                </div>
-            <?php endif ?>
-        </div>
-
-        <div class="dashboard-section">
-            <h3 class="section-title voided">Voided</h3>
-            <?php if (empty($todayVoided)) : ?>
-                <p class="muted">None</p>
-            <?php else : ?>
-                <div class="order-grid">
-                    <?php foreach ($todayVoided as $order) : ?>
-                        <div class="order-card voided-card">
-                            <div class="order-meta">
-                                <span class="order-number"><?= htmlspecialchars($order->orderNumber) ?></span>
-                                <span class="order-type"><?= htmlspecialchars($order->status) ?></span>
-                            </div>
-                            <div class="order-amount"><?= number_format($order->totalAmount, 2) ?></div>
-                            <div class="order-details">
-                                <span>Table <?= htmlspecialchars($order->tableNumber ?? '—') ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach ?>
-                </div>
-            <?php endif ?>
-        </div>
-    </div>
+    <details class="kiosk-section paid">
+        <summary><span class="section-title paid">Paid (<?= count($todayPaid) ?>)</span></summary>
+        <?php if (empty($todayPaid)) : ?>
+            <p class="muted">None</p>
+        <?php else : ?>
+            <div class="order-grid">
+                <?php foreach ($todayPaid as $order) : ?>
+                    <?php $renderCard($order, 'paid', $order->paymentMethod ?? 'PAID'); ?>
+                <?php endforeach ?>
+            </div>
+        <?php endif ?>
+    </details>
 
 </section>

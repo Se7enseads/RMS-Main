@@ -2,8 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
+use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\MenuService;
 
 class CategoryController
@@ -32,6 +35,7 @@ class CategoryController
         $result = $this->menuService->createCategory($data);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Category created: ' . ($data['name'] ?? '')));
             Redirect::to('/admin/categories');
             return;
         }
@@ -60,6 +64,7 @@ class CategoryController
         $result = $this->menuService->updateCategory($id, $data);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('Category updated: ' . ($data['name'] ?? '')));
             Redirect::to('/admin/categories');
             return;
         }
@@ -77,6 +82,9 @@ class CategoryController
         $category = $this->menuService->getCategoryById($id);
         if ($category) {
             $this->menuService->setCategoryActive($id, !$category->active);
+            Logger::add((int)Session::get('user_id'), Action::fromRequest(
+                ($category->active ? 'Category deactivated: ' : 'Category activated: ') . $category->name
+            ));
         }
         Redirect::to('/admin/categories');
     }

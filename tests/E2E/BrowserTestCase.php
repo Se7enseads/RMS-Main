@@ -49,7 +49,7 @@ abstract class BrowserTestCase extends PlaywrightTestCase
         $db = $this->liveDb();
 
         $stmt = $db->prepare(
-            'INSERT IGNORE INTO users (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
+            'INSERT IGNORE INTO staff (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
              SELECT ?, ?, ?, ?, ?, NULL, NULL, r.id, 1 FROM roles r WHERE r.name = ?'
         );
         $stmt->execute(['WTR001', 'Brian', 'Otieno', '222222', '1234', 'WAITER']);

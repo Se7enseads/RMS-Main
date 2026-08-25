@@ -2,6 +2,10 @@
 
 <a href="/store/inventory/create" class="button button-primary">+ Create New Ingredient</a>
 
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableIngredients.print(true)">Print</button>
+</div>
+
 <div id="ingredients-table"></div>
 
 <script>
@@ -21,7 +25,7 @@
     ], $ingredients)) ?>;
     const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
 
-    new Tabulator('#ingredients-table', {
+    const tableIngredients = new Tabulator('#ingredients-table', {
         data: ingredientsData,
         layout: 'fitColumns',
         pagination: true,
@@ -87,6 +91,7 @@
                 title: 'Actions',
                 field: 'id',
                 width: 210,
+                print: false,
                 formatter: (cell) => {
                     const id = cell.getValue();
                     return '<a href="/store/inventory/edit/' + id + '" class="button-outline action-button">Edit</a> ' +

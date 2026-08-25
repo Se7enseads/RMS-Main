@@ -1,6 +1,10 @@
-<h1>User List</h1>
+<h1>Users</h1>
 
 <a href="/admin/users/create" class="button button-primary">+ Create New User</a>
+
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableUsers.print(true)">Print</button>
+</div>
 
 <div id="users-table"></div>
 
@@ -14,7 +18,7 @@
   ], $users)) ?>;
   const csrfToken = <?= json_encode(\App\Core\Session::csrfToken()) ?>;
 
-  new Tabulator('#users-table', {
+  const tableUsers = new Tabulator('#users-table', {
     data: usersData,
     layout: 'fitColumns',
     pagination: true,
@@ -32,6 +36,7 @@
         title: 'Actions',
         field: 'id',
         width: 200,
+        print: false,
         formatter: (cell) => {
           const id = cell.getValue();
           return '<a href="/admin/users/update/' + id + '" class="button-outline action-button">Edit</a> ' +

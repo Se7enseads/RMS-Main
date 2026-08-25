@@ -8,6 +8,10 @@
   <span class="muted">(<?= htmlspecialchars($user->employeeNum) ?>)</span>
 </div>
 
+<div class="report-toolbar">
+    <button type="button" class="button button-outline" onclick="tableUserOrders.print(true)">Print</button>
+</div>
+
 <div id="user-orders-table"></div>
 
 <script>
@@ -23,7 +27,7 @@
       'payment' => $o->isCancelled() ? 'Cancelled' : ($o->isPaid ? 'Paid (' . ($o->paymentMethod ?? '?') . ')' : 'Unpaid'),
   ], $orders)) ?>;
 
-  new Tabulator('#user-orders-table', {
+  const tableUserOrders = new Tabulator('#user-orders-table', {
     data: userOrdersData,
     layout: 'fitColumns',
     groupBy: 'date',

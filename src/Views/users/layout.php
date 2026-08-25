@@ -4,19 +4,20 @@ use App\Core\Session;
 
 $userName = Session::get('user_name') ?? '';
 $navGroups = [
-    'Management' => [
-        ['href' => '/admin', 'label' => 'Dashboard'],
-        ['href' => '/admin/items', 'label' => 'Menu Items'],
-        ['href' => '/admin/categories', 'label' => 'Categories'],
-        ['href' => '/admin/users', 'label' => 'Users'],
-        ['href' => '/admin/roles', 'label' => 'Roles'],
-    ],
-    'Store' => [
-        ['href' => '/store', 'label' => 'Dashboard'],
-        ['href' => '/store/inventory', 'label' => 'Inventory'],
-        ['href' => '/store/stocktake', 'label' => 'Stock Take'],
-        ['href' => '/store/variance', 'label' => 'Variance'],
-    ],
+        'Management' => [
+                ['href' => '/admin', 'label' => 'Dashboard'],
+                ['href' => '/admin/items', 'label' => 'Menu Items'],
+                ['href' => '/admin/categories', 'label' => 'Categories'],
+                ['href' => '/admin/users', 'label' => 'Users'],
+                ['href' => '/admin/roles', 'label' => 'Roles'],
+        ['href' => '/admin/logs', 'label' => 'Logs'],
+        ],
+        'Store' => [
+                ['href' => '/store', 'label' => 'Dashboard'],
+                ['href' => '/store/inventory', 'label' => 'Inventory'],
+                ['href' => '/store/stocktake', 'label' => 'Stock Take'],
+                ['href' => '/store/variance', 'label' => 'Variance'],
+        ],
 ];
 ?>
 
@@ -63,6 +64,37 @@ $navGroups = [
     <main class="kiosk-content"><?= $slot ?></main>
 </div>
 <footer>&copy; <?= date('Y') ?> Restaurant Management System</footer>
+<script>
+    const passwordInput = document.getElementById('password');
+
+    // Common passwords blocklist
+    const commonPasswords = ['password', '1234567890', 'qwertyuiop', 'letmein123'];
+
+    function validatePassword() {
+        const password = passwordInput.value;
+
+        // Reset previous error state
+        passwordInput.setCustomValidity('');
+
+        if (!password) return;
+
+        // 1. Check against common password list
+        if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+            passwordInput.setCustomValidity('Password contains a common weak phrase.');
+            return;
+        }
+
+        // 3. Check for repeated characters (e.g., "aaaaa")
+        if (/(.)\1{4,}/.test(password)) {
+            passwordInput.setCustomValidity('Password contains too many repeating characters.');
+
+        }
+    }
+
+    // Run validation on input change
+    passwordInput.addEventListener('input', validatePassword);
+    emailInput.addEventListener('input', validatePassword);
+</script>
 </body>
 
 </html>

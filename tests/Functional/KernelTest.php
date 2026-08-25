@@ -4,8 +4,10 @@ namespace Tests\Functional;
 
 use App\Core\Database;
 use App\Core\Kernel;
+use App\Core\Logger;
 use App\Core\Redirect;
 use App\Core\Session;
+use App\Models\Action;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Integration\DatabaseTestCase;
@@ -61,6 +63,7 @@ class KernelTest extends DatabaseTestCase
     public function testManagerLoginRedirectsToDashboard(): void
     {
         $response = $this->handle('POST', '/login', [
+            'csrf_token' => $this->csrfToken(),
             'login_type' => 'password',
             'employee_num' => 'MGR001',
             'password' => 'manager123',
@@ -74,6 +77,7 @@ class KernelTest extends DatabaseTestCase
     public function testChefPinLoginRedirectsToKitchen(): void
     {
         $response = $this->handle('POST', '/login', [
+            'csrf_token' => $this->csrfToken(),
             'login_type' => 'pin',
             'pin' => '5678',
         ]);
@@ -85,6 +89,7 @@ class KernelTest extends DatabaseTestCase
     public function testWaiterPinLoginRedirectsToKiosk(): void
     {
         $response = $this->handle('POST', '/login', [
+            'csrf_token' => $this->csrfToken(),
             'login_type' => 'pin',
             'pin' => '1234',
         ]);
@@ -96,6 +101,7 @@ class KernelTest extends DatabaseTestCase
     public function testLoginRejectsBadCredentials(): void
     {
         $response = $this->handle('POST', '/login', [
+            'csrf_token' => $this->csrfToken(),
             'login_type' => 'password',
             'employee_num' => 'MGR001',
             'password' => 'wrong-password',
@@ -123,6 +129,7 @@ class KernelTest extends DatabaseTestCase
         $response = $this->handle('POST', '/logout');
 
         $this->assertSame(400, $response->getStatusCode());
+        $this->assertFalse(Session::has('user_id'));
     }
 
     public function testCsrfInvalidOnPostReturns400(): void
@@ -132,6 +139,7 @@ class KernelTest extends DatabaseTestCase
         $response = $this->handle('POST', '/logout', ['csrf_token' => 'not-the-token']);
 
         $this->assertSame(400, $response->getStatusCode());
+        $this->assertFalse(Session::has('user_id'));
     }
 
     public function testLogoutWithValidCsrfRedirectsToLogin(): void
@@ -206,9 +214,36 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame(403, $response->getStatusCode());
     }
 
+    public function testManagerSeesAuditLogsPage(): void
+    {
+        $this->loginAs('MANAGER');
+
+        Logger::add(1, new Action(method: 'POST', url: '/admin/users/create', what: 'User created: WTR002'));
+        Logger::add(1, new Action(method: 'GET', url: '/admin/logs', what: 'Staff logged in'));
+
+        $response = $this->handle('GET', '/admin/logs');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $content = $response->getContent();
+        $this->assertStringContainsString('>Logs<', $content);
+        $this->assertStringContainsString('logs-table', $content);
+        $this->assertStringContainsString('User created: WTR002', $content);
+        $this->assertStringContainsString('Manager Main', $content);
+    }
+
+    public function testWaiterForbiddenFromAuditLogs(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/admin/logs');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
     public function testBartenderPinLoginRedirectsToBar(): void
     {
         $response = $this->handle('POST', '/login', [
+            'csrf_token' => $this->csrfToken(),
             'login_type' => 'pin',
             'pin' => '9012',
         ]);
@@ -551,13 +586,133 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame(200, $response->getStatusCode());
     }
 
+    public function testWaiterCanPrintBill(): void
+    {
+        $this->loginAs('WTR001');
+
+        // place an order via the kiosk
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":2}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $orderNumber = (string) $db->query('SELECT order_number FROM orders WHERE id = ' . $orderId)->fetchColumn();
+
+        // bill page renders the receipt
+        $response = $this->handle('GET', "/kiosk/order/$orderId/bill");
+        $this->assertSame(200, $response->getStatusCode());
+        $content = $response->getContent();
+        $this->assertStringContainsString('RECEIPT', $content);
+        $this->assertStringContainsString($orderNumber, $content);
+        $this->assertStringContainsString('Chicken Soup | 2 | 500.00', $content);
+        $this->assertStringContainsString('^TOTAL | ^KES 500.00', $content);
+        $this->assertStringContainsString('NOT PAID', $content);
+        $this->assertStringContainsString('/vendor/receipt/receipt.js', $content);
+
+        // bill print is audited
+        $count = (int) $db->query("SELECT COUNT(*) FROM audit_logs WHERE action = 'Bill printed: $orderNumber'")->fetchColumn();
+        $this->assertSame(1, $count);
+    }
+
+    public function testBillForMissingOrderReturns404(): void
+    {
+        $this->loginAs('WTR001');
+
+        $response = $this->handle('GET', '/kiosk/order/999999/bill');
+
+        $this->assertSame(404, $response->getStatusCode());
+    }
+
+    public function testWaiterCanViewPaymentsPage(): void
+    {
+        $this->loginAs('WTR001');
+
+        // place an order via the kiosk
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":2}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $orderNumber = (string) $db->query('SELECT order_number FROM orders WHERE id = ' . $orderId)->fetchColumn();
+
+        // payments page lists the unpaid order
+        $response = $this->handle('GET', '/kiosk/payments');
+        $this->assertSame(200, $response->getStatusCode());
+        $content = $response->getContent();
+        $this->assertStringContainsString('payments-table', $content);
+        $this->assertStringContainsString($orderNumber, $content);
+        $this->assertStringContainsString('UNPAID', $content);
+        $this->assertStringContainsString('Print Bill', $content);
+
+        // record a cash payment and the order moves to paid
+        $db->exec("INSERT INTO payments (order_id, method, amount, cashier_id) VALUES ($orderId, 'CASH', 500.00, 1)");
+
+        $response = $this->handle('GET', '/kiosk/payments');
+        $content = $response->getContent();
+        $this->assertStringContainsString('CASH', $content);
+        $this->assertStringNotContainsString('UNPAID', $content);
+    }
+
+    public function testManagerCanViewReportsPage(): void
+    {
+        $this->loginAs('MANAGER');
+
+        // place an order and record a cash payment
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":2}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $db->exec("INSERT INTO payments (order_id, method, amount, cashier_id) VALUES ($orderId, 'CASH', 500.00, 1)");
+
+        $response = $this->handle('GET', '/admin/reports');
+        $this->assertSame(200, $response->getStatusCode());
+        $content = $response->getContent();
+        $this->assertStringContainsString('sales-table', $content);
+        $this->assertStringContainsString('items-table', $content);
+        $this->assertStringContainsString('payments-table', $content);
+        $this->assertStringContainsString('/admin/reports', $content);
+        $this->assertStringContainsString('Chicken Soup', $content);
+        $this->assertStringContainsString('CASH', $content);
+        $this->assertStringContainsString('500.00', $content);
+
+        // date range filter is applied
+        $response = $this->handle('GET', '/admin/reports?from=2000-01-01&to=2000-01-02');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringNotContainsString('Chicken Soup', $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromReports(): void
+    {
+        $this->loginAs('WTR001');
+
+        $response = $this->handle('GET', '/admin/reports');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
     public function testManagerCanCreateCategory(): void
     {
         $this->loginAs('MANAGER');
 
         $response = $this->handle('GET', '/admin/categories');
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertStringContainsString('Category List', $response->getContent());
+        $this->assertStringContainsString('>Categories<', $response->getContent());
 
         $response = $this->handle('POST', '/admin/categories/create', [
             'csrf_token' => $this->csrfToken(),

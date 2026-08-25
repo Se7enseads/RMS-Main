@@ -5,6 +5,7 @@ use App\Core\Session;
 $navItems = [
         ['href' => '/kiosk', 'label' => 'Dashboard'],
         ['href' => '/kiosk/order', 'label' => 'Place Order'],
+        ['href' => '/kiosk/payments', 'label' => 'Payments'],
 ];
 $userName = Session::get('user_name') ?? '';
 ?>

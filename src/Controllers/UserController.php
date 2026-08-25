@@ -2,8 +2,11 @@
 
 namespace App\Controllers;
 
+use App\Core\Logger;
 use App\Core\Redirect;
+use App\Core\Session;
 use App\Core\View;
+use App\Models\Action;
 use App\Services\OrderService;
 use App\Services\RoleService;
 use App\Services\UserService;
@@ -41,6 +44,7 @@ class UserController
         $result = $this->userService->createUser($data);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('User created: ' . ($data['employee_num'] ?? '')));
             Redirect::to('/admin/users');
             return;
         }
@@ -77,6 +81,7 @@ class UserController
         $result = $this->userService->updateUser($id, $data);
 
         if ($result['success']) {
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('User updated: ' . ($data['employee_num'] ?? '')));
             Redirect::to('/admin/users');
             return;
         }
@@ -94,7 +99,11 @@ class UserController
 
     public function deactivate(int $id): void
     {
-        $this->userService->deactivateUser($id);
+        $user = $this->userService->getUserById($id);
+        if ($user) {
+            $this->userService->deactivateUser($id);
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('User deactivated: ' . $user->employeeNum));
+        }
         Redirect::to('/admin/users');
     }
 

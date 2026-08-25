@@ -11,11 +11,13 @@ $routes->addCollection(require __DIR__ . '/Routes/auth.php');
 $routes->addCollection(require __DIR__ . '/Routes/index.php');
 $routes->addCollection(require __DIR__ . '/Routes/users.php');
 $routes->addCollection(require __DIR__ . '/Routes/roles.php');
+$routes->addCollection(require __DIR__ . '/Routes/logs.php');
 $routes->addCollection(require __DIR__ . '/Routes/items.php');
 $routes->addCollection(require __DIR__ . '/Routes/categories.php');
 $routes->addCollection(require __DIR__ . '/Routes/store.php');
 $routes->addCollection(require __DIR__ . '/Routes/kitchen.php');
 $routes->addCollection(require __DIR__ . '/Routes/bar.php');
 $routes->addCollection(require __DIR__ . '/Routes/kiosk.php');
+$routes->addCollection(require __DIR__ . '/Routes/reports.php');
 
 return $routes;

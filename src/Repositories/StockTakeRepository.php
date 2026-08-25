@@ -103,7 +103,7 @@ class StockTakeRepository
                    COUNT(sti.id) AS item_count,
                    COALESCE(SUM(sti.variance_value), 0) AS total_variance
             FROM stock_takes st
-            JOIN users s ON s.id = st.performed_by
+            JOIN staff s ON s.id = st.performed_by
             LEFT JOIN stock_take_items sti ON sti.stock_take_id = st.id
         ";
         if ($scope !== null) {

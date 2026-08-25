@@ -21,6 +21,7 @@ $title = "Login - RMS app"
     <!-- PIN Login -->
     <div id="panel-pin" class="form-panel active">
         <form action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
             <input type="hidden" name="login_type" value="pin">
             <div class="form-group">
                 <input type="password" name="pin" id="pin-input" placeholder="Enter 4-digit PIN" readonly required>
@@ -40,6 +41,7 @@ $title = "Login - RMS app"
     <!-- Password Login -->
     <div id="panel-password" class="form-panel">
         <form action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="<?= \App\Core\Session::csrfToken() ?>">
             <input type="hidden" name="login_type" value="password">
             <div class="form-group">
                 <label>Employee Number</label>

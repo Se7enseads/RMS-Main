@@ -93,6 +93,24 @@ class PermissionRepository
     }
 
     /**
+     * @return array<int, string> Permission names granted to the role.
+     */
+    public function findNamesByRoleName(string $roleName): array
+    {
+        $sql = "
+            SELECT p.name
+            FROM role_permissions rp
+            INNER JOIN permissions p ON p.id = rp.permission_id
+            INNER JOIN roles r ON r.id = rp.role_id
+            WHERE r.name = :role_name
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['role_name' => $roleName]);
+
+        return array_map(static fn (array $row): string => (string) $row['name'], $stmt->fetchAll());
+    }
+
+    /**
      * Replace the role's permission set. Nonexistent ids are ignored.
      *
      * @param array<int, int> $permissionIds

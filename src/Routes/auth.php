@@ -14,6 +14,7 @@ $authRoutes->add('login_form', new Route('/login', [
 
 $authRoutes->add('login', new Route('/login', [
     '_controller' => [AuthController::class, 'login'],
+    '_csrf' => true,
 ], methods: ['POST']));
 
 $authRoutes->add('logout', new Route('/logout', [

@@ -40,7 +40,7 @@ class AuthServiceTest extends DatabaseTestCase
     public function testLoginWithPasswordRejectsInactiveUser(): void
     {
         $pdo = Database::getConnection();
-        $pdo->exec("UPDATE users SET active = 0 WHERE employee_num = 'MGR001'");
+        $pdo->exec("UPDATE staff SET active = 0 WHERE employee_num = 'MGR001'");
 
         $service = new AuthService();
         $result = $service->loginWithPassword('MGR001', 'manager123');

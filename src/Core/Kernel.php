@@ -28,9 +28,11 @@ class Kernel
 
             // check if the request has a valid CSRF token
             if (!Middleware::csrf($parameters)) {
+                Session::destroy();
                 http_response_code(400);
                 View::render('errors/400');
             } elseif (!Middleware::auth($parameters)) {
+                Session::destroy();
                 Redirect::to('/login');
             } elseif (!Middleware::permissions($parameters)) {
                 http_response_code(403);

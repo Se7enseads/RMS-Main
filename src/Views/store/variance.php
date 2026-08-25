@@ -5,6 +5,10 @@
   A negative variance means stock is missing (shrinkage, spillage, theft); a positive one means surplus.
 </p>
 
+<div class="report-toolbar">
+  <button type="button" class="button button-outline" onclick="window.print()">Print</button>
+</div>
+
 <?php if (empty($takes)) : ?>
   <p class="muted">No stock takes recorded yet.
     <a href="<?= $scope === 'BAR' ? '/store/stocktake/bar' : '/store/stocktake' ?>">Start a stock take</a>.

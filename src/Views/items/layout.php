@@ -10,6 +10,7 @@ $navGroups = [
         ['href' => '/admin/categories', 'label' => 'Categories'],
         ['href' => '/admin/users', 'label' => 'Users'],
         ['href' => '/admin/roles', 'label' => 'Roles'],
+        ['href' => '/admin/logs', 'label' => 'Logs'],
     ],
     'Store' => [
         ['href' => '/store', 'label' => 'Dashboard'],
