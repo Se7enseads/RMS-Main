@@ -19,5 +19,7 @@ $routes->addCollection(require __DIR__ . '/Routes/kitchen.php');
 $routes->addCollection(require __DIR__ . '/Routes/bar.php');
 $routes->addCollection(require __DIR__ . '/Routes/kiosk.php');
 $routes->addCollection(require __DIR__ . '/Routes/reports.php');
+$routes->addCollection(require __DIR__ . '/Routes/day.php');
+$routes->addCollection(require __DIR__ . '/Routes/cashier.php');
 
 return $routes;

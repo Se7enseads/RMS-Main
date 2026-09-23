@@ -37,7 +37,7 @@ class AccessControlTest extends BrowserTestCase
 
     public function testManagerCanAccessUsersPage(): void
     {
-        $this->loginWithPassword('MGR001', 'manager123');
+        $this->loginWithPassword('MR001', 'manager123');
         $this->page->goto($this->baseUrl() . '/admin/users');
 
         $this->expect($this->page->locator('h1'))->toContainText('Users');

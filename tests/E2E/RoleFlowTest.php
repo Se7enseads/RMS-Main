@@ -12,7 +12,7 @@ class RoleFlowTest extends BrowserTestCase
         $barId = (int) $db->query("SELECT id FROM permissions WHERE name = 'bar.view'")->fetchColumn();
 
         try {
-            $this->loginWithPassword('MGR001', 'manager123');
+            $this->loginWithPassword('MR001', 'manager123');
 
             // create a role with a permission selected
             $this->page->goto($this->baseUrl() . '/admin/roles');

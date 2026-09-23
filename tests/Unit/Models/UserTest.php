@@ -11,7 +11,7 @@ class UserTest extends TestCase
     {
         $user = User::fromRow([
             'id' => '4',
-            'employee_num' => 'WTR001',
+            'employee_num' => 'WT001',
             'first_name' => 'Brian',
             'middle_name' => 'O.',
             'last_name' => 'Otieno',
@@ -28,7 +28,7 @@ class UserTest extends TestCase
         ]);
 
         $this->assertSame(4, $user->id);
-        $this->assertSame('WTR001', $user->employeeNum);
+        $this->assertSame('WT001', $user->employeeNum);
         $this->assertSame('WAITER', $user->roleName);
         $this->assertTrue($user->active);
         $this->assertSame('O.', $user->middleName);

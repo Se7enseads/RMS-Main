@@ -20,11 +20,13 @@ class UserService
 
     private UserRepository $userRepository;
     private RoleRepository $roleRepository;
+    private EmployeeNumberGenerator $employeeNumberGenerator;
 
     public function __construct()
     {
         $this->userRepository = new UserRepository();
         $this->roleRepository = new RoleRepository();
+        $this->employeeNumberGenerator = new EmployeeNumberGenerator();
     }
 
     public function getAllActiveUsers(): array
@@ -54,10 +56,13 @@ class UserService
             return ['success' => false, 'errors' => $errors];
         }
 
-        // Check uniqueness
-        if ($this->userRepository->findByEmployeeNum($data['employee_num'])) {
-            return ['success' => false, 'errors' => ['employee_num' => 'Employee number already exists.']];
+        $role = $this->roleRepository->findById((int) $data['role_id']);
+        if (!$role) {
+            return ['success' => false, 'errors' => ['role_id' => 'Selected role does not exist.']];
         }
+
+        // Employee numbers are auto-generated, never user-supplied.
+        $data['employee_num'] = $this->employeeNumberGenerator->nextForRole($role->name);
 
         if ($this->userRepository->findByNationalId($data['national_id'])) {
             return ['success' => false, 'errors' => ['national_id' => 'National ID already exists.']];
@@ -122,10 +127,6 @@ class UserService
 
         if (empty($data['last_name'])) {
             $errors['last_name'] = 'Last name is required.';
-        }
-
-        if (empty($data['employee_num'])) {
-            $errors['employee_num'] = 'Employee number is required.';
         }
 
         if (empty($data['national_id'])) {

@@ -16,16 +16,16 @@ class Session
             'samesite' => 'Strict',
         ]);
         session_start();
-        
-        self::csrfToken();
+
+        if (session_status() === PHP_SESSION_ACTIVE && !isset($_SESSION['_csrf_token'])) {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
     }
 
     public static function csrfToken(): string
     {
-        if (!self::has('_csrf_token')) {
-            self::set('_csrf_token', bin2hex(random_bytes(32)));
-        }
-        return self::get('_csrf_token');
+        self::start();
+        return $_SESSION['_csrf_token'] ?? ($_SESSION['_csrf_token'] = bin2hex(random_bytes(32)));
     }
 
     public static function validateCsrfToken(?string $token): bool

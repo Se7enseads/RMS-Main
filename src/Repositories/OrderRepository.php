@@ -24,6 +24,21 @@ class OrderRepository
         return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
     }
 
+    /**
+     * Open (PLACED) orders placed by a single user, newest first.
+     *
+     * @return array<int, Order>
+     */
+    public function findOpenOrdersByUserId(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            $this->orderSelect() . " WHERE o.status = 'PLACED' AND o.user_id = :user_id ORDER BY o.created_at DESC"
+        );
+        $stmt->execute(['user_id' => $userId]);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
     public function findOrdersForDate(string $date): array
     {
         $stmt = $this->db->prepare($this->orderSelect() . " WHERE DATE(o.created_at) = :date ORDER BY o.created_at DESC");
@@ -32,7 +47,7 @@ class OrderRepository
         return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
     }
 
-    /**
+/**
      * @return array<int, Order>
      */
     public function findOrdersByUserId(int $userId): array
@@ -41,6 +56,90 @@ class OrderRepository
         $stmt->execute(['user_id' => $userId]);
 
         return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    /**
+     * Non-cancelled, unpaid orders for a date, oldest first (cashier queue).
+     *
+     * @return array<int, Order>
+     */
+    public function findUnpaidByDate(string $date): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT o.*, t.number AS table_number, u.first_name AS user_name,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count,
+                   0 AS is_paid,
+                   NULL AS payment_method
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            LEFT JOIN staff u ON o.user_id = u.id
+            WHERE o.status <> 'CANCELLED'
+              AND NOT EXISTS (
+                  SELECT 1 FROM payments p WHERE p.order_id = o.id AND p.method <> 'REFUND'
+              )
+              AND DATE(o.created_at) = :date
+            ORDER BY o.created_at ASC
+        ");
+        $stmt->execute(['date' => $date]);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    /**
+     * Paid (settled) orders for a date, newest first.
+     *
+     * @return array<int, Order>
+     */
+    public function findPaidByDate(string $date): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT o.*, t.number AS table_number, u.first_name AS user_name,
+                   (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count,
+                   1 AS is_paid,
+                   (SELECT p.method FROM payments p WHERE p.order_id = o.id ORDER BY p.id DESC LIMIT 1) AS payment_method
+            FROM orders o
+            LEFT JOIN tables t ON o.table_id = t.id
+            LEFT JOIN staff u ON o.user_id = u.id
+            WHERE o.status = 'PAYED'
+              AND DATE(o.created_at) = :date
+            ORDER BY o.created_at DESC
+        ");
+        $stmt->execute(['date' => $date]);
+
+        return array_map([Order::class, 'fromRow'], $stmt->fetchAll());
+    }
+
+    /**
+     * Insert a payment for an order, mark it PAID and stamp closed_at
+     * (all in one transaction).
+     */
+    public function recordPayment(int $orderId, string $method, float $amount, int $cashierId, ?string $transactionCode = null): void
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $stmt = $this->db->prepare('
+                INSERT INTO payments (transaction_code, method, amount, order_id, cashier_id)
+                VALUES (:transaction_code, :method, :amount, :order_id, :cashier_id)
+            ');
+            $stmt->execute([
+                'transaction_code' => $transactionCode,
+                'method' => $method,
+                'amount' => $amount,
+                'order_id' => $orderId,
+                'cashier_id' => $cashierId,
+            ]);
+
+            $update = $this->db->prepare("
+                UPDATE orders SET status = 'PAYED', closed_at = NOW() WHERE id = :id
+            ");
+            $update->execute(['id' => $orderId]);
+
+            $this->db->commit();
+        } catch (Throwable $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function countOpenOrders(): int
@@ -285,6 +384,86 @@ class OrderRepository
                 'method' => (string) $row['method'],
                 'count' => (int) $row['count'],
                 'total' => (float) $row['total'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
+     * Sales grouped by menu category for a date range (view v_item_sales_by_day).
+     *
+     * @return array<int, array{category: string, quantity: int, revenue: float}>
+     */
+    public function categorySales(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT category,
+                   SUM(quantity) AS quantity,
+                   SUM(revenue) AS revenue
+            FROM v_item_sales_by_day
+            WHERE day BETWEEN :from AND :to
+            GROUP BY category
+            ORDER BY revenue DESC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'category' => (string) $row['category'],
+                'quantity' => (int) $row['quantity'],
+                'revenue' => (float) $row['revenue'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
+     * Order counts and revenue per hour of day for a date range (excluding cancelled orders).
+     *
+     * @return array<int, array{hour: int, orders: int, revenue: float}>
+     */
+    public function hourlySales(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT HOUR(created_at)                  AS hour,
+                   COUNT(*)                          AS orders,
+                   COALESCE(SUM(total_amount), 0)    AS revenue
+            FROM orders
+            WHERE status <> 'CANCELLED'
+              AND DATE(created_at) BETWEEN :from AND :to
+            GROUP BY HOUR(created_at)
+            ORDER BY hour ASC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'hour' => (int) $row['hour'],
+                'orders' => (int) $row['orders'],
+                'revenue' => (float) $row['revenue'],
+            ];
+        }, $stmt->fetchAll());
+    }
+
+    /**
+     * Order counts grouped by status for a date range.
+     *
+     * @return array<int, array{status: string, count: int}>
+     */
+    public function statusSummary(string $from, string $to): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT status,
+                   COUNT(*) AS count
+            FROM orders
+            WHERE DATE(created_at) BETWEEN :from AND :to
+            GROUP BY status
+            ORDER BY count DESC, status ASC
+        ");
+        $stmt->execute(['from' => $from, 'to' => $to]);
+
+        return array_map(static function (array $row): array {
+            return [
+                'status' => (string) $row['status'],
+                'count' => (int) $row['count'],
             ];
         }, $stmt->fetchAll());
     }

@@ -16,7 +16,7 @@ class UserRepositoryTest extends DatabaseTestCase
 
     public function testFindByEmployeeNum(): void
     {
-        $user = $this->repo->findByEmployeeNum('MGR001');
+        $user = $this->repo->findByEmployeeNum('MR001');
 
         $this->assertNotNull($user);
         $this->assertSame('MANAGER', $user->roleName);
@@ -27,7 +27,7 @@ class UserRepositoryTest extends DatabaseTestCase
         $user = $this->repo->findByNationalId('222222');
 
         $this->assertNotNull($user);
-        $this->assertSame('WTR001', $user->employeeNum);
+        $this->assertSame('WT001', $user->employeeNum);
     }
 
     public function testFindByNationalIdReturnsNullWhenMissing(): void
@@ -45,7 +45,7 @@ class UserRepositoryTest extends DatabaseTestCase
 
     public function testFindByPinReturnsNullWhenMissing(): void
     {
-        $this->assertNull($this->repo->findByPin('0000'));
+        $this->assertNull($this->repo->findByPin('9999'));
     }
 
     public function testDeactivateSetsInactive(): void

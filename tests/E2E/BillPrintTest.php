@@ -27,11 +27,11 @@ class BillPrintTest extends BrowserTestCase
     public function testBillPageRendersReceiptSvg(): void
     {
         $this->ensureDemoData();
-        $this->loginWithPin('1234'); // WTR001
+        $this->loginWithPin('1234'); // WT001
 
         // seed an order directly
         $db = $this->liveDb();
-        $userId = (int) $db->query("SELECT id FROM staff WHERE employee_num = 'WTR001'")->fetchColumn();
+        $userId = (int) $db->query("SELECT id FROM staff WHERE employee_num = 'WT001'")->fetchColumn();
         $stmt = $db->prepare(
             "INSERT INTO orders (order_number, status, type, user_id, table_id, total_amount)
              VALUES (?, 'PLACED', 'DINE_IN', ?, 1, ?)"

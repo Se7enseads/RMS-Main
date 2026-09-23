@@ -15,11 +15,9 @@ if (!empty($errors)) : ?>
 <form action="/admin/users/create" method="POST">
     <input type="hidden" name="csrf_token" value="<?= Session::csrfToken() ?>">
 
-    <label>Employee Number
-        <input type="text" name="employee_num" value="<?= htmlspecialchars($old['employee_num'] ?? '') ?>" required>
-    </label>
+    <p class="muted">Employee number is generated automatically from the role (e.g. <code>WT002</code>).</p>
 
-    <label>First Name
+<label>First Name
         <input type="text" name="first_name" value="<?= htmlspecialchars($old['first_name'] ?? '') ?>" required>
     </label>
 

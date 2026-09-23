@@ -22,7 +22,7 @@ class AuthServiceTest extends DatabaseTestCase
     public function testLoginWithPasswordSuccess(): void
     {
         $service = new AuthService();
-        $result = $service->loginWithPassword('MGR001', 'manager123');
+        $result = $service->loginWithPassword('MR001', 'manager123');
 
         $this->assertTrue($result['success']);
         $this->assertSame('MANAGER', Session::get('role_name'));
@@ -31,7 +31,7 @@ class AuthServiceTest extends DatabaseTestCase
     public function testLoginWithPasswordRejectsWrongPassword(): void
     {
         $service = new AuthService();
-        $result = $service->loginWithPassword('MGR001', 'wrongpass');
+        $result = $service->loginWithPassword('MR001', 'wrongpass');
 
         $this->assertFalse($result['success']);
         $this->assertNull(Session::get('user_id'));
@@ -40,10 +40,10 @@ class AuthServiceTest extends DatabaseTestCase
     public function testLoginWithPasswordRejectsInactiveUser(): void
     {
         $pdo = Database::getConnection();
-        $pdo->exec("UPDATE staff SET active = 0 WHERE employee_num = 'MGR001'");
+        $pdo->exec("UPDATE staff SET active = 0 WHERE employee_num = 'MR001'");
 
         $service = new AuthService();
-        $result = $service->loginWithPassword('MGR001', 'manager123');
+        $result = $service->loginWithPassword('MR001', 'manager123');
 
         $this->assertFalse($result['success']);
     }
@@ -69,7 +69,7 @@ class AuthServiceTest extends DatabaseTestCase
     public function testLoginWithPinRejectsInvalidPin(): void
     {
         $service = new AuthService();
-        $result = $service->loginWithPin('0000');
+        $result = $service->loginWithPin('9999');
 
         $this->assertFalse($result['success']);
         $this->assertSame('Invalid PIN.', $result['error']);

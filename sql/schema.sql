@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS roles
 CREATE TABLE IF NOT EXISTS permissions
 (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    name       VARCHAR(100) NOT NULL,
+    name       VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -247,28 +247,6 @@ CREATE TABLE IF NOT EXISTS payments
     INDEX (method)
 );
 
--- Booking Module
--- ------------------
-CREATE TABLE IF NOT EXISTS reservation
-(
-    id               INT PRIMARY KEY AUTO_INCREMENT,
-    staff_id         INT          NOT NULL,
-    table_id         INT          NOT NULL,
-    customer_name    VARCHAR(100) NOT NULL,
-    reservation_time TIMESTAMP    NOT NULL,
-    status           ENUM ( 'CANCELLED', 'PAID') DEFAULT 'PAID',
-    payment_id       INT          NOT NULL,
-    created_at       TIMESTAMP                   DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP                   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (staff_id) REFERENCES staff (id),
-    FOREIGN KEY (table_id) REFERENCES tables (id),
-    FOREIGN KEY (payment_id) REFERENCES payments (id),
-
-    INDEX (reservation_time),
-    INDEX (status)
-);
-
 -- System Module
 -- --------------------
 
@@ -291,38 +269,78 @@ CREATE TABLE IF NOT EXISTS audit_logs
 -- --------------------
 
 CREATE OR REPLACE VIEW v_sales_by_day AS
-SELECT DATE(o.created_at) AS day,
-       COUNT(*) AS orders,
+SELECT DATE(o.created_at)               AS day,
+       COUNT(*)                         AS orders,
        (SELECT COALESCE(SUM(oi.quantity), 0)
-        FROM order_items oi WHERE oi.order_id = o.id) AS items,
+        FROM order_items oi
+        WHERE oi.order_id = o.id)       AS items,
        COALESCE(SUM(o.total_amount), 0) AS revenue,
        COALESCE(SUM(CASE
-           WHEN EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
-           THEN o.total_amount ELSE 0 END), 0) AS paid,
+                        WHEN EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
+                            THEN o.total_amount
+                        ELSE 0 END), 0) AS paid,
        COALESCE(SUM(CASE
-           WHEN NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
-           THEN o.total_amount ELSE 0 END), 0) AS unpaid
+                        WHEN NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id)
+                            THEN o.total_amount
+                        ELSE 0 END), 0) AS unpaid
 FROM orders o
 WHERE o.status <> 'CANCELLED'
 GROUP BY DATE(o.created_at);
 
 CREATE OR REPLACE VIEW v_item_sales_by_day AS
-SELECT DATE(o.created_at) AS day,
-       mi.name AS item,
-       COALESCE(mc.name, 'Uncategorised') AS category,
-       SUM(oi.quantity) AS quantity,
+SELECT DATE(o.created_at)                  AS day,
+       mi.name                             AS item,
+       COALESCE(mc.name, 'Uncategorised')  AS category,
+       SUM(oi.quantity)                    AS quantity,
        SUM(oi.quantity * oi.price_at_time) AS revenue
 FROM order_items oi
-INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
-LEFT JOIN menu_categories mc ON mc.id = mi.category_id
-INNER JOIN orders o ON o.id = oi.order_id
+         INNER JOIN menu_items mi ON mi.id = oi.menu_item_id
+         LEFT JOIN menu_categories mc ON mc.id = mi.category_id
+         INNER JOIN orders o ON o.id = oi.order_id
 WHERE o.status <> 'CANCELLED'
 GROUP BY DATE(o.created_at), mi.id, mi.name, mc.name;
 
 CREATE OR REPLACE VIEW v_payments_by_day AS
 SELECT DATE(created_at) AS day,
        method,
-       COUNT(*) AS count,
-       SUM(amount) AS total
+       COUNT(*)         AS count,
+       SUM(amount)      AS total
 FROM payments
 GROUP BY DATE(created_at), method;
+
+-- Business Days / Day Closure
+-- --------------------
+
+CREATE TABLE IF NOT EXISTS business_days
+(
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    date          DATE          NOT NULL UNIQUE,
+    is_closed     TINYINT(1)    NOT NULL DEFAULT 0,
+    opened_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    closed_at     TIMESTAMP     NULL,
+    closed_by     INT           NULL,
+    order_count   INT           NOT NULL DEFAULT 0,
+    item_count    INT           NOT NULL DEFAULT 0,
+    gross_total   DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    paid_total    DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    unpaid_total  DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    cash_total    DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    card_total    DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    mobile_total  DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    FOREIGN KEY (closed_by) REFERENCES staff (id),
+
+    INDEX (is_closed)
+);
+
+-- Restaurant settings (used on receipts/bills)
+-- --------------------
+
+CREATE TABLE IF NOT EXISTS restaurant_details
+(
+    id       INT AUTO_INCREMENT PRIMARY KEY,
+    name     VARCHAR(120) NOT NULL DEFAULT 'RMS Restaurant',
+    address  VARCHAR(255) NOT NULL DEFAULT '',
+    phone    VARCHAR(30)  NOT NULL DEFAULT '',
+    currency VARCHAR(10)  NOT NULL DEFAULT 'KES'
+);

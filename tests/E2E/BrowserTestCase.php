@@ -52,9 +52,9 @@ abstract class BrowserTestCase extends PlaywrightTestCase
             'INSERT IGNORE INTO staff (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
              SELECT ?, ?, ?, ?, ?, NULL, NULL, r.id, 1 FROM roles r WHERE r.name = ?'
         );
-        $stmt->execute(['WTR001', 'Brian', 'Otieno', '222222', '1234', 'WAITER']);
-        $stmt->execute(['CHF001', 'Chef', 'Mkuu', 'CHEF01', '5678', 'HEAD CHEF']);
-        $stmt->execute(['BTR001', 'Bar', 'Tender', 'BTR001', '9012', 'BARTENDER']);
+        $stmt->execute(['WT001', 'Brian', 'Otieno', '222222', '1234', 'WAITER']);
+        $stmt->execute(['HC001', 'Chef', 'Mkuu', 'CHEF01', '5678', 'HEAD CHEF']);
+        $stmt->execute(['BR001', 'Bar', 'Tender', 'BR001', '9012', 'BARTENDER']);
 
         $catStmt = $db->prepare(
             "INSERT INTO menu_categories (name, station, active)

@@ -8,7 +8,7 @@ class ManagerFlowTest extends BrowserTestCase
     {
         $itemName = 'E2E Test Burger ' . substr(md5((string) mt_rand()), 0, 6);
 
-        $this->loginWithPassword('MGR001', 'manager123');
+        $this->loginWithPassword('MR001', 'manager123');
 
         $this->expect($this->page)->toHaveURL($this->baseUrl() . '/admin');
         $this->expect($this->page->locator('h1'))->toContainText('Dashboard');
@@ -40,7 +40,7 @@ class ManagerFlowTest extends BrowserTestCase
     {
         $itemName = 'E2E Test Burger ' . substr(md5((string) mt_rand()), 0, 6);
 
-        $this->loginWithPassword('MGR001', 'manager123');
+        $this->loginWithPassword('MR001', 'manager123');
 
         // create the item
         $this->page->locator('.sidebar-link[href="/admin/items"]')->click();

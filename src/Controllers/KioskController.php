@@ -28,7 +28,8 @@ class KioskController
     public function dashboard(): void
     {
         $date = $_GET['date'] ?? null;
-        $data = $this->orderService->getDashboardData($date);
+        $user = Session::get('user_id');
+        $data = $this->orderService->getDashboardData($date, $user !== null ? (int) $user : null);
 
         $openOrders = $data['openOrders'];
         $orders = $data['orders'];

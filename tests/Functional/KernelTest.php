@@ -60,12 +60,23 @@ class KernelTest extends DatabaseTestCase
         $this->assertSame('/login', $response->headers->get('Location'));
     }
 
+    public function testManagerSeesReportsNavOnAdminSubpages(): void
+    {
+        $this->loginAs('MANAGER');
+
+        foreach (['/admin/items', '/admin/users', '/admin/roles', '/admin/categories', '/store', '/store/inventory'] as $path) {
+            $response = $this->handle('GET', $path);
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertStringContainsString('/admin/reports', $response->getContent());
+        }
+    }
+
     public function testManagerLoginRedirectsToDashboard(): void
     {
         $response = $this->handle('POST', '/login', [
             'csrf_token' => $this->csrfToken(),
             'login_type' => 'password',
-            'employee_num' => 'MGR001',
+            'employee_num' => 'MR001',
             'password' => 'manager123',
         ]);
 
@@ -103,7 +114,7 @@ class KernelTest extends DatabaseTestCase
         $response = $this->handle('POST', '/login', [
             'csrf_token' => $this->csrfToken(),
             'login_type' => 'password',
-            'employee_num' => 'MGR001',
+            'employee_num' => 'MR001',
             'password' => 'wrong-password',
         ]);
 
@@ -184,6 +195,23 @@ class KernelTest extends DatabaseTestCase
 
         $response = $this->handle('GET', '/admin/users');
 
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testStoreManagerStoreOnly(): void
+    {
+        $this->loginAs('STORE MANAGER', 6);
+
+        $response = $this->handle('GET', '/store/inventory');
+        $this->assertSame(200, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/store');
+        $this->assertSame(200, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/admin/users');
+        $this->assertSame(403, $response->getStatusCode());
+
+        $response = $this->handle('GET', '/admin/reports');
         $this->assertSame(403, $response->getStatusCode());
     }
 
@@ -336,6 +364,14 @@ class KernelTest extends DatabaseTestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('Dashboard', $response->getContent());
+        $this->assertStringContainsString('Business day', $response->getContent());
+        $this->assertStringContainsString(date('Y-m-d'), $response->getContent());
+        $this->assertStringContainsString('Close Day', $response->getContent());
+        $this->assertStringContainsString('charts-grid', $response->getContent());
+        $this->assertStringContainsString('revenueTrend', $response->getContent());
+        $this->assertStringContainsString('topItems', $response->getContent());
+        $this->assertStringContainsString('categoryShare', $response->getContent());
+        $this->assertStringContainsString('/vendor/chartjs/chart.umd.min.js', $response->getContent());
     }
 
     public function testManagerCanViewItemEditForm(): void
@@ -572,6 +608,41 @@ class KernelTest extends DatabaseTestCase
         $this->assertStringContainsString('No open orders', $response->getContent());
     }
 
+    public function testWaiterDashboardShowsOnlyTheirOpenOrders(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":1}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $orderNumber = (string) $db->query("SELECT order_number FROM orders WHERE id = $orderId")->fetchColumn();
+
+        $openSection = fn(string $content): string => substr(
+            strstr($content, 'Open Orders'),
+            0,
+            strpos(strstr($content, 'Open Orders'), 'Orders for'),
+        );
+
+        // the waiter sees their own open order
+        $content = $this->handle('GET', '/kiosk')->getContent();
+        $this->assertStringContainsString($orderNumber, $openSection($content));
+
+        // another user's dashboard does not list it as an open order
+        $this->loginAs('MANAGER');
+        $content = $this->handle('GET', '/kiosk')->getContent();
+        $this->assertStringNotContainsString($orderNumber, $openSection($content));
+
+        // ... but it still appears in the full list of orders for the day
+        $this->assertStringContainsString($orderNumber, $content);
+    }
+
     public function testKioskOrderRejectsInvalidItemsJson(): void
     {
         $this->loginAs('MANAGER');
@@ -588,7 +659,7 @@ class KernelTest extends DatabaseTestCase
 
     public function testWaiterCanPrintBill(): void
     {
-        $this->loginAs('WTR001');
+        $this->loginAs('WAITER', 2);
 
         // place an order via the kiosk
         $response = $this->handle('POST', '/kiosk/order', [
@@ -621,7 +692,7 @@ class KernelTest extends DatabaseTestCase
 
     public function testBillForMissingOrderReturns404(): void
     {
-        $this->loginAs('WTR001');
+        $this->loginAs('WAITER', 2);
 
         $response = $this->handle('GET', '/kiosk/order/999999/bill');
 
@@ -630,7 +701,7 @@ class KernelTest extends DatabaseTestCase
 
     public function testWaiterCanViewPaymentsPage(): void
     {
-        $this->loginAs('WTR001');
+        $this->loginAs('WAITER', 2);
 
         // place an order via the kiosk
         $response = $this->handle('POST', '/kiosk/order', [
@@ -686,10 +757,15 @@ class KernelTest extends DatabaseTestCase
         $this->assertStringContainsString('sales-table', $content);
         $this->assertStringContainsString('items-table', $content);
         $this->assertStringContainsString('payments-table', $content);
+        $this->assertStringContainsString('categories-table', $content);
+        $this->assertStringContainsString('hours-table', $content);
+        $this->assertStringContainsString('status-table', $content);
         $this->assertStringContainsString('/admin/reports', $content);
         $this->assertStringContainsString('Chicken Soup', $content);
         $this->assertStringContainsString('CASH', $content);
         $this->assertStringContainsString('500.00', $content);
+        $this->assertStringContainsString('Mains', $content);
+        $this->assertStringContainsString('PLACED', $content);
 
         // date range filter is applied
         $response = $this->handle('GET', '/admin/reports?from=2000-01-01&to=2000-01-02');
@@ -699,7 +775,7 @@ class KernelTest extends DatabaseTestCase
 
     public function testWaiterForbiddenFromReports(): void
     {
-        $this->loginAs('WTR001');
+        $this->loginAs('WAITER', 2);
 
         $response = $this->handle('GET', '/admin/reports');
 
@@ -1181,5 +1257,180 @@ $this->assertStringContainsString('Permissions', $response->getContent());
             'count' => ['1' => '1'],
         ]);
         $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testManagerCanViewCloseDayPage(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('GET', '/admin/close-day');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Close Business Day', $response->getContent());
+        $this->assertStringContainsString(date('Y-m-d'), $response->getContent());
+    }
+
+    public function testWaiterForbiddenFromCloseDay(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/admin/close-day');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testCloseDaySnapshotsSummaryAndAdvances(): void
+    {
+        $this->loginAs('MANAGER');
+
+        // place a 2x Chicken Soup (250 each) order
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":1,"quantity":2}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $orderNumber = (string) $db->query("SELECT order_number FROM orders WHERE id = $orderId")->fetchColumn();
+
+        // settle it at the cashier
+        $response = $this->handle('POST', "/cashier/orders/$orderId/pay", [
+            'csrf_token' => $this->csrfToken(),
+            'method' => 'CASH',
+            'amount' => '500',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/cashier', $response->headers->get('Location'));
+
+        // confirm page shows the day summary
+        $content = $this->handle('GET', '/admin/close-day')->getContent();
+        $this->assertStringContainsString('KES 500.00', $content);
+
+        // close the day
+        $response = $this->handle('POST', '/admin/close-day', [
+            'csrf_token' => $this->csrfToken(),
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/admin', $response->headers->get('Location'));
+
+        $today = date('Y-m-d');
+        $next = date('Y-m-d', strtotime('+1 day'));
+
+        $closed = $db->query("SELECT is_closed, order_count, paid_total FROM business_days WHERE date = '$today'")->fetch();
+        $this->assertSame('1', (string) $closed['is_closed']);
+        $this->assertSame('1', (string) $closed['order_count']);
+        $this->assertSame(500.0, (float) $closed['paid_total']);
+
+        $open = $db->query("SELECT is_closed FROM business_days WHERE date = '$next'")->fetch();
+        $this->assertSame('0', (string) $open['is_closed']);
+
+        $this->assertSame('PAYED', $db->query("SELECT status FROM orders WHERE id = $orderId")->fetchColumn());
+        $this->assertNotNull($db->query("SELECT closed_at FROM orders WHERE id = $orderId")->fetchColumn());
+    }
+
+    public function testCashierListsAndSettlesUnpaidOrders(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 2,
+            'items' => '[{"menu_item_id":3,"quantity":1}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+        $orderNumber = (string) $db->query("SELECT order_number FROM orders WHERE id = $orderId")->fetchColumn();
+
+        $this->loginAs('CASHIER', 5);
+
+        $response = $this->handle('GET', '/cashier');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Cashier', $response->getContent());
+        $this->assertStringContainsString($orderNumber, $response->getContent());
+
+        // settle the whole amount in cash
+        $response = $this->handle('POST', "/cashier/orders/$orderId/pay", [
+            'csrf_token' => $this->csrfToken(),
+            'method' => 'CASH',
+            'amount' => '200',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('/cashier', $response->headers->get('Location'));
+
+        $payment = $db->query("SELECT method, amount, cashier_id FROM payments WHERE order_id = $orderId")->fetch();
+        $this->assertSame('CASH', $payment['method']);
+        $this->assertSame(200.0, (float) $payment['amount']);
+        $this->assertSame('5', (string) $payment['cashier_id']);
+        $this->assertSame('PAYED', $db->query("SELECT status FROM orders WHERE id = $orderId")->fetchColumn());
+
+        $content = $this->handle('GET', '/cashier')->getContent();
+        $this->assertStringNotContainsString($orderNumber, strstr($content, 'Settled Today', true));
+        $this->assertStringContainsString('Settled Today', $content);
+        $this->assertStringContainsString($orderNumber, strstr($content, 'Settled Today'));
+        $this->assertMatchesRegularExpression('/method-badge method-cash\b/i', $content);
+        $this->assertStringContainsString("href=\"/kiosk/order/$orderId/bill\" target=\"_blank\"", $content);
+
+        $bill = $this->handle('GET', "/kiosk/order/$orderId/bill");
+        $this->assertSame(200, $bill->getStatusCode());
+        $this->assertStringContainsString('PAID', $bill->getContent());
+    }
+
+    public function testCashierPayValidatesAmountAndMethod(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('POST', '/kiosk/order', [
+            'csrf_token' => $this->csrfToken(),
+            'order_type' => 'DINE_IN',
+            'table_id' => 1,
+            'items' => '[{"menu_item_id":2,"quantity":1}]',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $db = Database::getConnection();
+        $orderId = (int) $db->query('SELECT MAX(id) FROM orders')->fetchColumn();
+
+        $this->loginAs('CASHIER', 5);
+
+        $response = $this->handle('POST', "/cashier/orders/$orderId/pay", [
+            'csrf_token' => $this->csrfToken(),
+            'method' => 'BITCOIN',
+            'amount' => '100',
+        ]);
+        $this->assertSame(302, $response->getStatusCode());
+
+        $this->assertSame('PLACED', $db->query("SELECT status FROM orders WHERE id = $orderId")->fetchColumn());
+        $this->assertSame('0', (string) $db->query('SELECT COUNT(*) FROM payments')->fetchColumn());
+
+        $content = $this->handle('GET', '/cashier')->getContent();
+        $this->assertStringContainsString('Choose a valid payment method', $content);
+    }
+
+    public function testWaiterForbiddenFromCashier(): void
+    {
+        $this->loginAs('WAITER', 2);
+
+        $response = $this->handle('GET', '/cashier');
+
+        $this->assertSame(403, $response->getStatusCode());
+    }
+
+    public function testCashierPayMissingCsrfReturns400(): void
+    {
+        $this->loginAs('MANAGER');
+
+        $response = $this->handle('POST', '/cashier/orders/1/pay', [
+            'method' => 'CASH',
+            'amount' => '100',
+        ]);
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertFalse(Session::has('user_id'));
     }
 }

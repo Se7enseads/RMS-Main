@@ -4,12 +4,14 @@
 
 ## Feature List TODOs
 
-1. [ ] Add Admin close day button
+1. [x] Add Admin close day button
     - [x] Role Creation should include a selection for available permissions
     - [x] Fix issue with sorting in status
     - [ ] Voiding of orders by (Owner, Manager if right is given)
     - [x] Variance display
         - [x] After daily stock-take a variance is performed to
+    - [x] Closing the day snapshots a Z-report into `business_days`, marks orders' day closed
+        and opens the next business day. Unpaid orders roll forward.
 2. [x] Store display
     - [x] Insert the individual ingredients to the store
     - [x] Store admin page.
@@ -18,8 +20,11 @@
     - [x] food should be displayed here
 3. [x] Add Bar Display
     - [x] Drinks should go to the bar display
-3. [ ] Add Cashier Display
-    - [ ] Add Payment Display and receipt printing (integrate Daraja API)
+3. [x] Add Cashier Display
+    - [x] Add Payment Display and receipt printing (integrate Daraja API)
+        - [x] Basic settle flow (`/cashier`): single full payment per order (CASH/CARD/MOBILE),
+            marks order PAYED, stamps `closed_at`, receipt via the bill route
+        - [ ] Daraja integration for MOBILE payments (manual txn code for now)
 4. [x] Add Reports in Admin
     - [x] Use Tabulator for table printing and download/export functions.
     - [x] Report queries defined as SQL views (v_sales_by_day, v_item_sales_by_day, v_payments_by_day)
@@ -57,3 +62,15 @@ Check if all routes:
   - [x] details for accordion
   - [x] dialog for modals
 - [x] make sure titles match up
+
+- [ ] Redo queries
+- [x] Employee number should have a format. auto-generated(eg: MG001 )
+    - [x] `EmployeeNumberGenerator` (2-letter role prefix + zero-padded number, MAX+1 per role)
+- [x] add closing day button on cashier and manager side
+    - [x] `business_days` table + `BusinessDayService` (open/close/advance, Z-report snapshot)
+    - [x] `day.close` permission, `/admin/close-day` confirm page, dashboard banner + Close Day button
+- [x] add visualisation on the manager dashboard ()
+    - [x] bar charts (Chart.js: 7-day revenue line, top-10 items bar, revenue-by-category doughnut)
+- [x] add more reports
+    - [x] Sales by Category, Hourly Sales, Orders by Status tables on `/admin/reports`
+    - [x] fix reports button not appearing properly (shared permission-gated sidebar in all layouts)

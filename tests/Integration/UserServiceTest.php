@@ -18,7 +18,6 @@ class UserServiceTest extends DatabaseTestCase
     private function createPayload(array $overrides = []): array
     {
         return array_merge([
-            'employee_num' => 'NEW001',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'national_id' => '999999',
@@ -34,16 +33,50 @@ class UserServiceTest extends DatabaseTestCase
         $result = $service->createUser($this->createPayload());
 
         $this->assertTrue($result['success']);
-        $this->assertSame('NEW001', $result['user']->employeeNum);
+        $this->assertSame('WT002', $result['user']->employeeNum);
     }
 
-    public function testCreateUserRejectsDuplicateEmployeeNum(): void
+    public function testCreateUserAutoGeneratesSequentialNumbersPerRole(): void
     {
         $service = new UserService();
-        $result = $service->createUser($this->createPayload(['employee_num' => 'WTR001']));
 
-        $this->assertFalse($result['success']);
-        $this->assertArrayHasKey('employee_num', $result['errors']);
+        $first = $service->createUser($this->createPayload());
+        $second = $service->createUser($this->createPayload(['national_id' => '999998', 'pin' => '4322']));
+
+        $this->assertTrue($first['success']);
+        $this->assertTrue($second['success']);
+        $this->assertSame('WT002', $first['user']->employeeNum);
+        $this->assertSame('WT003', $second['user']->employeeNum);
+    }
+
+    public function testCreateUserGeneratesRoleSpecificPrefixes(): void
+    {
+        $service = new UserService();
+
+        $roles = [
+            'MANAGER' => 'MR',
+            'WAITER' => 'WT',
+            'HEAD CHEF' => 'HC',
+            'BARTENDER' => 'BR',
+            'CASHIER' => 'CS',
+        ];
+
+        foreach ($roles as $roleName => $prefix) {
+            $roleId = (int) Database::getConnection()
+                ->query("SELECT id FROM roles WHERE name = '$roleName'")
+                ->fetchColumn();
+            $nationalId = '911' . str_pad((string) $roleId, 3, '0', STR_PAD_LEFT);
+            $pin = str_pad((string) $roleId, 4, '0', STR_PAD_LEFT);
+
+            $result = $service->createUser($this->createPayload([
+                'role_id' => $roleId,
+                'national_id' => $nationalId,
+                'pin' => $pin,
+            ]));
+
+            $this->assertTrue($result['success']);
+            $this->assertMatchesRegularExpression('/^' . $prefix . '00[2-9]$/', $result['user']->employeeNum);
+        }
     }
 
     public function testCreateUserRejectsDuplicateNationalId(): void
@@ -121,7 +154,7 @@ class UserServiceTest extends DatabaseTestCase
     public function testUpdateUserKeepsEmployeeNumAndNationalId(): void
     {
         $wtrId = (int) Database::getConnection()
-            ->query("SELECT id FROM staff WHERE employee_num = 'WTR001'")
+            ->query("SELECT id FROM staff WHERE employee_num = 'WT001'")
             ->fetchColumn();
 
         $service = new UserService();
@@ -138,14 +171,14 @@ class UserServiceTest extends DatabaseTestCase
         $row = Database::getConnection()
             ->query("SELECT employee_num, national_id FROM staff WHERE id = $wtrId")
             ->fetch();
-        $this->assertSame('WTR001', $row['employee_num']);
+        $this->assertSame('WT001', $row['employee_num']);
         $this->assertSame('222222', $row['national_id']);
     }
 
     public function testUpdateUserChangesPassword(): void
     {
         $wtrId = (int) Database::getConnection()
-            ->query("SELECT id FROM staff WHERE employee_num = 'WTR001'")
+            ->query("SELECT id FROM staff WHERE employee_num = 'WT001'")
             ->fetchColumn();
 
         $service = new UserService();
@@ -160,15 +193,15 @@ class UserServiceTest extends DatabaseTestCase
         $this->assertTrue($result['success']);
 
         $auth = new AuthService();
-        $login = $auth->loginWithPassword('WTR001', 'N3w!SecurePassw0rd');
+        $login = $auth->loginWithPassword('WT001', 'N3w!SecurePassw0rd');
         $this->assertTrue($login['success']);
-        $this->assertSame('WTR001', $login['user']->employeeNum);
+        $this->assertSame('WT001', $login['user']->employeeNum);
     }
 
     public function testUpdateUserRejectsPasswordContainingCurrentName(): void
     {
         $wtrId = (int) Database::getConnection()
-            ->query("SELECT id FROM staff WHERE employee_num = 'WTR001'")
+            ->query("SELECT id FROM staff WHERE employee_num = 'WT001'")
             ->fetchColumn();
 
         $service = new UserService();
@@ -187,7 +220,7 @@ class UserServiceTest extends DatabaseTestCase
     public function testDeactivateUser(): void
     {
         $wtrId = (int) Database::getConnection()
-            ->query("SELECT id FROM staff WHERE employee_num = 'WTR001'")
+            ->query("SELECT id FROM staff WHERE employee_num = 'WT001'")
             ->fetchColumn();
 
         $service = new UserService();

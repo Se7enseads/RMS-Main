@@ -6,20 +6,22 @@
  * @var array<string, mixed> $restaurant
  */
 
-function escapeReceipt(string $text): string
-{
-    return strtr($text, [
-        '\\' => '\\\\',
-        '|' => '\\|',
-        '{' => '\\{',
-        '}' => '\\}',
-        '~' => '\\~',
-        '_' => '\\_',
-        '"' => '\\"',
-        '`' => '\\`',
-        '^' => '\\^',
-        '-' => '\\-',
-    ]);
+if (!function_exists('escapeReceipt')) {
+    function escapeReceipt(string $text): string
+    {
+        return strtr($text, [
+            '\\' => '\\\\',
+            '|' => '\\|',
+            '{' => '\\{',
+            '}' => '\\}',
+            '~' => '\\~',
+            '_' => '\\_',
+            '"' => '\\"',
+            '`' => '\\`',
+            '^' => '\\^',
+            '-' => '\\-',
+        ]);
+    }
 }
 
 $name = $restaurant['name'] ?? 'RMS Restaurant';

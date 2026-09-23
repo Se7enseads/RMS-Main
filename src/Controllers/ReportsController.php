@@ -30,6 +30,9 @@ class ReportsController
             'salesByDay' => $this->orderRepository->salesByDay($from, $to),
             'itemSales' => $this->orderRepository->itemSales($from, $to),
             'paymentMethods' => $this->orderRepository->paymentMethodSummary($from, $to),
+            'categorySales' => $this->orderRepository->categorySales($from, $to),
+            'hourlySales' => $this->orderRepository->hourlySales($from, $to),
+            'statusSummary' => $this->orderRepository->statusSummary($from, $to),
             'from' => $from,
             'to' => $to,
         ]);

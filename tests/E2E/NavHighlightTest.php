@@ -6,7 +6,7 @@ class NavHighlightTest extends BrowserTestCase
 {
     public function testSidebarHighlightsCurrentPageAcrossAdminAndKiosk(): void
     {
-        $this->loginWithPassword('MGR001', 'manager123');
+        $this->loginWithPassword('MR001', 'manager123');
 
         $link = 'nav.sidebar-nav a.sidebar-link';
 

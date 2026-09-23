@@ -22,11 +22,13 @@ class OrderService
     /**
      * @return array<string, mixed>
      */
-    public function getDashboardData(?string $date = null): array
+    public function getDashboardData(?string $date = null, ?int $userId = null): array
     {
         $date = $date ?? date('Y-m-d');
 
-        $openOrders = $this->orderRepository->findOpenOrders();
+        $openOrders = $userId !== null
+            ? $this->orderRepository->findOpenOrdersByUserId($userId)
+            : $this->orderRepository->findOpenOrders();
         $orders = $this->orderRepository->findOrdersForDate($date);
 
         $orderIds = array_values(array_unique(array_map(

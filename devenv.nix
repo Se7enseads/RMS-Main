@@ -1,4 +1,8 @@
-{pkgs, lib, ...}: let
+{
+  pkgs,
+  lib,
+  ...
+}: let
   # shared libraries for Playwright/Chrome browser automation
   browserLibs = with pkgs; [
     glib
@@ -30,6 +34,12 @@ in {
   services.mysql = {
     enable = true;
     package = pkgs.mariadb;
+    settings = {
+      mysqldump = {
+        quick = true;
+        max_allowed_packet = "16M";
+      };
+    };
     initialDatabases = [
       {
         name = "rms";

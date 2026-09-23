@@ -54,6 +54,8 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE stock_takes');
         $pdo->exec('TRUNCATE TABLE audit_logs');
         $pdo->exec('TRUNCATE TABLE tables');
+        $pdo->exec('TRUNCATE TABLE business_days');
+        $pdo->exec('TRUNCATE TABLE restaurant_details');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         self::seed($pdo);
@@ -80,14 +82,17 @@ class DatabaseSetup
         $pdo->exec('TRUNCATE TABLE stock_takes');
         $pdo->exec('TRUNCATE TABLE audit_logs');
         $pdo->exec('TRUNCATE TABLE tables');
+        $pdo->exec('TRUNCATE TABLE business_days');
+        $pdo->exec('TRUNCATE TABLE restaurant_details');
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         self::seed($pdo);
     }
 
     /**
-     * Baseline: MANAGER/WAITER/HEAD CHEF roles, permissions (mirrors
-     * sql/seed_rbac.sql), one user per role, two menu items, two tables.
+     * Baseline: MANAGER/WAITER/HEAD CHEF/BARTENDER/CASHIER/STORE MANAGER
+     * roles, permissions (mirrors sql/seed_rbac.sql), one user per role,
+     * three menu items, two tables.
      */
     private static function seed(PDO $pdo): void
     {
@@ -100,6 +105,10 @@ class DatabaseSetup
         $chefRoleId = (int) $pdo->lastInsertId();
         $stmt->execute(['BARTENDER']);
         $bartenderRoleId = (int) $pdo->lastInsertId();
+        $stmt->execute(['CASHIER']);
+        $cashierRoleId = (int) $pdo->lastInsertId();
+        $stmt->execute(['STORE MANAGER']);
+        $storeRoleId = (int) $pdo->lastInsertId();
 
         $permissions = [
             'dashboard.view', 'kitchen.view', 'bar.view', 'users.view', 'users.create',
@@ -109,6 +118,7 @@ class DatabaseSetup
             'categories.update', 'categories.deactivate', 'inventory.view', 'inventory.create',
             'inventory.update', 'inventory.deactivate',
             'inventory.stocktake', 'inventory.variance', 'log.view', 'reports.view', 'store.view',
+            'cashier.view', 'cashier.settle', 'day.close',
         ];
         $permStmt = $pdo->prepare('INSERT INTO permissions (name) VALUES (?)');
         $permissionIds = [];
@@ -123,15 +133,23 @@ class DatabaseSetup
         }
         $grantStmt->execute([$chefRoleId, $permissionIds['kitchen.view']]);
         $grantStmt->execute([$bartenderRoleId, $permissionIds['bar.view']]);
+        $grantStmt->execute([$cashierRoleId, $permissionIds['cashier.view']]);
+        $grantStmt->execute([$cashierRoleId, $permissionIds['cashier.settle']]);
+        foreach (['store.view', 'inventory.view', 'inventory.create', 'inventory.update',
+                     'inventory.deactivate', 'inventory.stocktake', 'inventory.variance'] as $storePerm) {
+            $grantStmt->execute([$storeRoleId, $permissionIds[$storePerm]]);
+        }
 
         $userStmt = $pdo->prepare(
             'INSERT INTO staff (employee_num, first_name, last_name, national_id, pin, pin_hash, password_hash, role_id, active)
              VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 1)'
         );
-        $userStmt->execute(['MGR001', 'Manager', 'Main', '30000001', '1111', password_hash('manager123', PASSWORD_BCRYPT), $managerRoleId]);
-        $userStmt->execute(['WTR001', 'Brian', 'Otieno', '222222', '1234', null, $waiterRoleId]);
-        $userStmt->execute(['CHF001', 'Chef', 'Mkuu', 'CHEF01', '5678', null, $chefRoleId]);
-        $userStmt->execute(['BTR001', 'Bar', 'Tender', 'BTR001', '9012', null, $bartenderRoleId]);
+        $userStmt->execute(['MR001', 'Manager', 'Main', '30000001', '1111', password_hash('manager123', PASSWORD_BCRYPT), $managerRoleId]);
+        $userStmt->execute(['WT001', 'Brian', 'Otieno', '222222', '1234', null, $waiterRoleId]);
+        $userStmt->execute(['HC001', 'Chef', 'Mkuu', 'CHEF01', '5678', null, $chefRoleId]);
+        $userStmt->execute(['BR001', 'Bar', 'Tender', 'BTR001', '9012', null, $bartenderRoleId]);
+        $userStmt->execute(['CS001', 'Cash', 'Ier', 'CSH001', '3456', null, $cashierRoleId]);
+        $userStmt->execute(['ST001', 'Store', 'Keeper', 'STO001', '0000', password_hash('store123', PASSWORD_BCRYPT), $storeRoleId]);
 
         $catStmt = $pdo->prepare('INSERT INTO menu_categories (name, station) VALUES (?, ?)');
         $catStmt->execute(['Mains', 'KITCHEN']);
@@ -149,5 +167,8 @@ class DatabaseSetup
         $tableStmt = $pdo->prepare('INSERT INTO tables (number, capacity) VALUES (?, ?)');
         $tableStmt->execute([1, 4]);
         $tableStmt->execute([2, 6]);
+
+        $dayStmt = $pdo->prepare('INSERT INTO business_days (date, is_closed) VALUES (?, 0)');
+        $dayStmt->execute([date('Y-m-d')]);
     }
 }

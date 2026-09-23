@@ -40,11 +40,10 @@ class UserController
 
     public function save(): void
     {
-        $data = $_POST;
-        $result = $this->userService->createUser($data);
+        $result = $this->userService->createUser($_POST);
 
         if ($result['success']) {
-            Logger::add((int)Session::get('user_id'), Action::fromRequest('User created: ' . ($data['employee_num'] ?? '')));
+            Logger::add((int)Session::get('user_id'), Action::fromRequest('User created: ' . $result['user']->employeeNum));
             Redirect::to('/admin/users');
             return;
         }

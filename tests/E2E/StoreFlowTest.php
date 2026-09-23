@@ -10,7 +10,7 @@ class StoreFlowTest extends BrowserTestCase
         $ingredientName = 'E2E Water ' . substr(md5((string) mt_rand()), 0, 6);
 
         try {
-            $this->loginWithPassword('MGR001', 'manager123');
+            $this->loginWithPassword('MR001', 'manager123');
 
             // create a category
             $this->page->goto($this->baseUrl() . '/admin/categories');
